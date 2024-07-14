@@ -143,8 +143,8 @@ public class PotionInfo {
      */
     public static List<String> getPrefList(){
       return ENHANCE.stream()
-              .filter(E-> !E.getPref().isEmpty())
               .map(EN::getPref)
+              .filter(E -> !E.isEmpty())
               .toList();
     }
 
@@ -258,7 +258,7 @@ public class PotionInfo {
    * @param name PotionType の文字列
    * @return PotionType
    */
-  public static final PotionType getPotionType (String name){
+  public static PotionType getPotionType(String name){
     return Arrays.stream(values())
             .filter(T->T.toString().startsWith(name))
             .findFirst()
