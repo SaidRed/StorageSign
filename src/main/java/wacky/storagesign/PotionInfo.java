@@ -14,12 +14,9 @@ import wacky.storagesign.Exception.PotionException;
 import static org.bukkit.potion.PotionType.*;
 
 public class PotionInfo {
-  @Getter
-  protected Material material;
-  @Getter
-  protected PotionType potionType;
-  @Getter
-  protected short damage = 0;
+  @Getter protected Material material;
+  @Getter protected PotionType potionType;
+  @Getter protected short damage = 0;
   protected Logger logger;
 
   private static final String ERROR_MESSAGE_NOT_POTION = "ポーションデータが存在しません";
@@ -67,7 +64,7 @@ public class PotionInfo {
      * @param material ポーションの Material
      * @return SS表記の"POTION"部分の表記
      */
-    public static String getPref (Material material){
+    public static String getPrefix (Material material){
       return TYPE.stream()
               .filter(T->T.getMaterial().equals(material))
               .map(Type.TY::getPref)
@@ -85,7 +82,7 @@ public class PotionInfo {
    */
   protected static final class Enhance {
     private static final EN DEFAULT = new EN("0" , "");
-    private static final Set<EN> ENHANCE =Set.of(
+    private static final Set<EN> ENHANCE = Set.of(
             DEFAULT,
             new EN("1" , "LONG_"),
             new EN("2" , "STRONG_")
@@ -149,7 +146,7 @@ public class PotionInfo {
     }
 
     /**
-     * potionType 表記のプレフィックス を正規表現で or ヒットさせる Pattern
+     * potionType 表記のプレフィックス を正規表現で orヒットさせる Pattern
      * @return プレフィックスを正規表現でヒットさせる regex
      */
     public static String regPrefList(){
@@ -316,7 +313,7 @@ public class PotionInfo {
    * @return SS Block アイテム表記名
    */
   public static String getSignData(Material mat, PotionType pot, short damage) {
-    return Type.getPref(mat) + ":" + PotionInfo.getShortName(pot) + ":" + damage;
+    return Type.getPrefix(mat) + ":" + PotionInfo.getShortName(pot) + ":" + damage;
   }
 
   /**
@@ -375,8 +372,8 @@ public class PotionInfo {
 
   /**
    *
-   * @param nbtName
-   * @return
+   * @param nbtName NBTName
+   * @return 旧ショートネーム
    */
   public static String convertNBTNameToShortName(String nbtName) {
     return Old_Name.getOldShortName(nbtName);

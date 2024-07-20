@@ -35,20 +35,17 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.PotionType;
 import org.bukkit.util.NumberConversions;
+import wacky.storagesign.information.*;
 import wacky.storagesign.signdefinition.SignDefinition;
 import wacky.storagesign.signdefinition.SignMatStringDefinition;
 
 /**
- * StrageSignの実体クラスです.
+ * StorageSignの実体クラスです.
  */
 public class StorageSign {
 
@@ -99,12 +96,16 @@ public class StorageSign {
   /**
    * 看板に収納されているエンチャント本のエンチャント情報.
    */
-  protected Enchantment ench;
+//  protected Enchantment ench;
+//  protected EnchantBook enchantBook;
   /**
    * 看板に収納されているポーションの種類.
    */
-  protected PotionType pot;
+//  protected PotionType pot;
+//  protected Potion potion;
 
+
+  protected SSInformation info;
   /**
    * 看板に収納されているアイテム数.
    */
@@ -143,28 +144,39 @@ public class StorageSign {
       this.mat = getMaterial(str[0].split(":")[0]);
 
       if (this.mat == OMINOUS_BOTTLE) {
+        /*
         logger.debug("StorageSign have OMINOUS_BOTTLE");
         logger.trace("this.mat: " + this.mat);
         logger.trace("str[0].split(\":\"): " + str[0].split(":"));
         OmniousBottleInfo oi = new OmniousBottleInfo(this.mat, str[0].split(":"));
         this.damage = oi.getAmplifier();
-        logger.trace("this.damage: " + this.damage);
+        logger.trace("this.damage: " + this.damage);*/
+        this.info = new OminousBottle(str[0],logger);
       }else if (this.mat == ENCHANTED_BOOK) {
         logger.debug("StorageSign have ENCHANTED_BOOK");
-        EnchantInfo ei = new EnchantInfo(this.mat, str[0].split(":"), logger);
+//        EnchantInfo ei = new EnchantInfo(this.mat, str[0].split(":"), logger);
+//        String[] str1 = str[0].split(":");
+//        this.enchantBook = new EnchantBook(str[0],logger);
+        this.info = new EnchantedBook(str[0],logger);
+        /*
         this.damage = ei.getDamage();
-        this.ench = ei.getEnchantType();
+        this.ench = ei.getEnchantment();
+        // */
 
       } else if (potion_materials.contains(this.mat)) {
         logger.debug("StorageSign have any Potion");
         // PotionInfo pi = new PotionInfo(mat, str[0].split(":"));
+        /*
         String[] potionStr = str[0].split(":");
         PotionInfo pi = new PotionInfo(this.mat, potionStr[0],
             PotionInfo.convertNBTNameToShortName(potionStr[1]), potionStr[2], logger);
         this.mat = pi.getMaterial();
         this.damage = pi.getDamage();
-        this.pot = pi.getPotionType();
-
+        this.pot = pi.getPotionType();*/
+//        this.potion = new Potion(str[0],logger);
+        this.info = new Potion(str[0], logger);
+      } else if (mat == Material.FIREWORK_ROCKET) {
+        this.info = new FireworkRocket(str[0],logger);
       } else if (str[0].contains(":")) {
         logger.debug("str[0].contains\":\"");
         this.damage = NumberConversions.toShort(str[0].split(":")[1]);
@@ -174,6 +186,9 @@ public class StorageSign {
         // 1.13の滑らかハーフと1.14の石ハーフ区別
         this.mat = SMOOTH_STONE_SLAB;
 
+      }
+      else{
+        this.info = new NormalInformation(str[0], logger);
       }
       this.amount = NumberConversions.toInt(str[1]);
     }
@@ -191,30 +206,42 @@ public class StorageSign {
     logger.debug("StorageSign(Material signmat):start");
     // 上と統合したい
     String[] line2 = sign.getSide(Side.FRONT).getLine(1).trim().split(":");
+    String SSItemData = sign.getSide(Side.FRONT).getLine(1);
     this.mat = getMaterial(line2[0]);
     this.isEmpty = (this.mat == null || this.mat == AIR);
 
     if (this.mat == OMINOUS_BOTTLE) {
+      /*
       logger.debug("OMINOUS_BOTTLE");
       OmniousBottleInfo oi = new OmniousBottleInfo(this.mat, line2);
       logger.trace("this.mat: " + this.mat);
       logger.trace("line2: " + line2);
       this.damage = oi.getAmplifier();
       logger.trace("this.damage: " + this.damage);
+       */
+      this.info = new OminousBottle(SSItemData, logger);
     } else if (this.mat == ENCHANTED_BOOK) {
       logger.debug("ENCHANTED_BOOK");
+      /*
       EnchantInfo ei = new EnchantInfo(this.mat, line2, logger);
       this.damage = ei.getDamage();
-      this.ench = ei.getEnchantType();
+      this.ench = ei.getEnchantment();
+       */
+//      this.enchantBook = new EnchantBook(SSItemData, logger);
+      this.info = new EnchantedBook(SSItemData, logger);
 
     } else if (potion_materials.contains(this.mat)) {
       logger.debug("any POTION");
       // PotionInfo pi = new PotionInfo(mat, line2);
-      PotionInfo pi = new PotionInfo(this.mat, line2[0], line2[1], line2[2], logger);
+
+//      this.potion = new Potion(SSItemData, logger);
+      this.info = new Potion(SSItemData, logger);
+/*      PotionInfo pi = new PotionInfo(this.mat, line2[0], line2[1], line2[2], logger);
       this.mat = pi.getMaterial();
       this.damage = pi.getDamage();
-      this.pot = pi.getPotionType();
-
+      this.pot = pi.getPotionType();*/
+    } else if (mat == Material.FIREWORK_ROCKET) {
+      this.info = new FireworkRocket(SSItemData,logger);
     } else if (line2.length == 2) {
       logger.debug("line2.length is 2");
       this.damage = NumberConversions.toShort(line2[1]);
@@ -225,9 +252,12 @@ public class StorageSign {
       this.mat = SMOOTH_STONE_SLAB;
 
     }
+    else{
+      this.info = new NormalInformation(SSItemData ,logger);
+    }
 
     this.amount = NumberConversions.toInt(sign.getSide(Side.FRONT).getLine(2));
-    this.isEmpty = this.amount == 0;
+    //this.isEmpty = this.amount == 0;
     this.stack = 1;
 
     // 壁掛け看板のチェック
@@ -311,16 +341,18 @@ public class StorageSign {
     if (str.matches("")) {
       logger.debug("Material is AIR");
       return AIR;
-
-    } else if (str.matches("EmptySign")) {
+    }
+    if (str.matches("EmptySign")) {
       logger.debug("Material is OldOakStorageSign");
       this.damage = 1;
       return OAK_SIGN;
-    } else if (SignMatStringDefinition.asStringMaterialMap().containsKey(str)) {
+    }
+    if (SignMatStringDefinition.asStringMaterialMap().containsKey(str)) {
       logger.debug("Material is " + SignMatStringDefinition.asStringMaterialMap().get(str));
       this.damage = 1;
       return SignMatStringDefinition.asStringMaterialMap().get(str);
-    } else if (mat_string_material_maps.containsKey(str)) {
+    }
+    if (mat_string_material_maps.containsKey(str)) {
       logger.debug("Material is " + mat_string_material_maps.get(str));
       this.damage = 1;
       return mat_string_material_maps.get(str);
@@ -374,6 +406,8 @@ public class StorageSign {
    */
   protected String getShortName() {
     logger.debug("getShortName:start");
+
+    testGetMat();
     // 2行目の記載内容
     logger.trace("this.mat=" + mat);
     if (this.mat == null || this.mat == AIR) {
@@ -397,20 +431,27 @@ public class StorageSign {
       logger.debug(SignMatStringDefinition.asMaterialStringMap().get(this.mat));
       return SignMatStringDefinition.asMaterialStringMap().get(this.mat);
     } else if (OMINOUS_BOTTLE.equals(this.mat)) {
+      /*
       logger.debug("OMINOUS_BOTTLE + data");
       logger.trace("this.mat: " + this.mat);
       logger.trace("this.damage: " + this.damage);
       String singString = OmniousBottleInfo.GetSignString(this.mat, this.damage);
       logger.trace("singString: " + singString);
       return singString;
-
+*/
+      return info.getSSStorageItemData();
     } else if (ENCHANTED_BOOK.equals(this.mat)) {
       logger.debug("ENCHBOOK + data");
-      return "ENCHBOOK:" + EnchantInfo.getShortType(this.ench) + ":" + this.damage;
+//      return "ENCHBOOK:" + EnchantInfo.getShortType(this.ench) + ":" + this.damage;
+//      return enchantBook.getSSStorageItemData();
+      return info.getSSStorageItemData();
 
     } else if (potion_materials.contains(this.mat)) {
       logger.debug("any POTION");
-      return PotionInfo.getSignData(this.mat, pot, this.damage);
+//      return PotionInfo.getSignData(this.mat, pot, this.damage);
+//      return potion.getSSStorageItemData();
+      return info.getSSStorageItemData();
+
     }
     // リミットブレイク
     int limit = 99;
@@ -451,11 +492,12 @@ public class StorageSign {
     List<String> list = new ArrayList<>();
 
     // IDとMaterial名が混ざってたり、エンチャ本対応したり
-    if (this.isEmpty) {
+    if (this.isEmpty || this.amount == 0) {
       logger.debug("Empty");
       return emptySign(this.smat, this.stack);
 
-    } else if (OMINOUS_BOTTLE.equals(this.mat)) {
+//    } else if (OMINOUS_BOTTLE.equals(this.mat)) {
+      /*
       logger.debug("OMINOUS_BOTTLE");
       logger.trace("this.mat: " + this.mat);
       logger.trace("this.damage: " + this.damage);
@@ -463,18 +505,25 @@ public class StorageSign {
       String tagData = OmniousBottleInfo.GetTagData(this.mat, this.damage, this.amount);
       logger.trace("tagData: " + tagData);
       list.add(tagData);
-    } else if (ENCHANTED_BOOK.equals(this.mat)) {
-      logger.debug("ENCHANTED_BOOK");
-      list.add(this.mat.toString() + ":" + this.ench.getKey().getKey() + ":" + this.damage + " "
-          + this.amount);
+       */
+//      list.add(info.getSSLoraItemData() + " " + this.amount);
+//    } else if (ENCHANTED_BOOK.equals(this.mat)) {
+//      logger.debug("ENCHANTED_BOOK");
+//      list.add(this.mat.toString() + ":" + this.ench.getKey().getKey() + ":" + this.damage + " "
+//          + this.amount);
+//      list.add(this.enchantBook.getSSLoraItemData() + " " + this.amount);
+//      list.add(info.getSSLoraItemData() + " " + this.amount);
 
-    } else if (potion_materials.contains(this.mat)) {
-      logger.debug("any POTION");
-      list.add(PotionInfo.getTagData(this.mat, pot, this.damage, this.amount));
+//    } else if (potion_materials.contains(this.mat)) {
+//      logger.debug("any POTION");
+//      list.add(PotionInfo.getTagData(this.mat, pot, this.damage, this.amount));
+//      list.add(this.potion.getSSLoraItemData() + " " + this.amount);
+//      list.add(this.info.getSSLoraItemData() + " " + this.amount);
 
     } else {
-      logger.debug("other");
-      list.add(getShortName() + " " + this.amount);
+//      logger.debug("other");
+      //list.add(getShortName() + " " + this.amount);
+      list.add(this.info.getSSLoraItemData() + " " + this.amount);
 
     }
     logger.debug("getStorageSign:end");
@@ -579,6 +628,7 @@ public class StorageSign {
       }
 
     } else if (this.mat == OMINOUS_BOTTLE) {
+      /*
       logger.debug("OMINOUS_BOTTLE");
       logger.trace("this.mat: " + this.mat);
       logger.trace("this.damage: " + this.damage);
@@ -586,25 +636,32 @@ public class StorageSign {
       ItemStack item = OmniousBottleInfo.GetItemStack(this.mat, this.amount, this.damage);
       logger.trace("tagData: " + item);
       return item;
+      */
+      return info.getStorageItemStack();
     } else if (this.mat == ENCHANTED_BOOK) {
       logger.debug("ENCHANTED_BOOK");
+      /*
       ItemStack item = new ItemStack(this.mat, 1);
 
       EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta) item.getItemMeta();
       Objects.requireNonNull(enchantMeta).addStoredEnchant(this.ench, this.damage, true);
       item.setItemMeta(enchantMeta);
 
-      return item;
+      return item;*/
+//      return this.enchantBook.getStorageItemStack();
+      return info.getStorageItemStack();
 
     } else if (potion_materials.contains(this.mat)) {
       logger.debug("any POTION");
-
+/*
       ItemStack item = new ItemStack(this.mat, 1);
       PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
       Objects.requireNonNull(potionMeta).setBasePotionType(this.pot);
       item.setItemMeta(potionMeta);
 
-      return item;
+      return item;*/
+//      return this.potion.getStorageItemStack();
+      return info.getStorageItemStack();
 
     } else if (this.mat == FIREWORK_ROCKET) {
       logger.debug("FIREWORK_ROCKET");
@@ -659,16 +716,19 @@ public class StorageSign {
     }
 
     if (this.mat == OMINOUS_BOTTLE && item.getType() == OMINOUS_BOTTLE) {
+      /*
       logger.debug("OMINOUS_BOTTLE");
       logger.trace("item.getItemMeta(): " + item.getItemMeta());
       logger.trace("this.damage: " + this.damage);
       boolean isSimilar = OmniousBottleInfo.IsSimilar(item.getItemMeta(), this.damage);
       logger.trace("isSimilar: " + isSimilar);
       return isSimilar;
+       */
+      info.isSimilar(item);
     } else if (this.mat == ENCHANTED_BOOK && item.getType() == ENCHANTED_BOOK) {
       logger.debug("ENCHANTED_BOOK");
 
-      EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta) item.getItemMeta();
+/*      EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta) item.getItemMeta();
       // ないと思うけど、metaがnullならfalse.
       if (Objects.isNull(enchantMeta)) {
         return false;
@@ -678,31 +738,34 @@ public class StorageSign {
         Enchantment itemEnch =
             enchantMeta.getStoredEnchants().keySet().toArray(new Enchantment[0])[0];
 
-        if (itemEnch.equals(this.ench)
-            && enchantMeta.getStoredEnchantLevel(itemEnch) == this.damage) {
+        if (itemEnch.equals(this.enchantBook.getItemType())
+            && enchantMeta.getStoredEnchantLevel(itemEnch) == this.enchantBook.getCord()) {
           logger.debug("Item is Similar");
           return true;
         }
       }
       logger.debug(" Item isn't Similar");
-      return false;
-
+      return false;*/
+      logger.debug("Item is Similar");
+//      this.enchantBook.isSimilar(item);
+      info.isSimilar(item);
     } else if (potion_materials.contains(this.mat)) {
       logger.debug(" This mat is PotionSeries.");
-
-      logger.trace(" this.mat.equals(item.getType()): " + this.mat.equals(item.getType()));
-      if (this.mat.equals(item.getType())) {
+//      logger.trace(" this.mat.equals(item.getType()): " + this.mat.equals(item.getType()));
+/*      if (this.mat.equals(item.getType())) {
         PotionMeta pom = (PotionMeta) item.getItemMeta();
         // ないと思うけど、pomがnullならfalse
         if (Objects.isNull(pom) || Objects.isNull(pom.getBasePotionType())) {
           return false;
         }
-        logger.trace(" pom.getBasePotionType().equals(this.pot): " + pom.getBasePotionType()
-            .equals(this.pot));
         if (pom.getBasePotionType().equals(this.pot)) {
           return true;
         }
-      }
+      }*/
+//      logger.trace(" pom.getBasePotionType().equals(this.pot): " + this.potion.getItemType());
+//      return this.potion.isSimilar(item);
+//      logger.trace(" pom.getBasePotionType().equals(this.pot): " + this.info.getItemType());
+      return this.info.isSimilar(item);
     } else if (block_entity_data_Materials.contains(this.mat)) {
       // block_entity_data_Materialsに入ってるものは、isSimilarで比較できないので、Materialが一緒かで判定
       logger.debug(" This mat is block_entity_data_Materials.");
@@ -813,34 +876,37 @@ public class StorageSign {
   /**
    * フィールド変数：enchのgetter.
    */
-  public Enchantment getEnchant() {
+/*  public EnchantBook getEnchant() {
     logger.debug("getEnchant");
-    return this.ench;
-  }
+    return this.enchantBook;
+  }*/
 
   /**
    * フィールド変数：enchのsetter.
    */
-  public void setEnchant(Enchantment ench) {
+  /*public void setEnchant(Enchantment ench) {
     logger.debug("setEnchant");
     this.ench = ench;
-  }
+  }*/
+/*  public void setEnchant(EnchantBook ench) {
+    this.enchantBook = ench;
+  }*/
 
   /**
    * フィールド変数：potのgetter.
    */
-  public PotionType getPotion() {
+/*  public Potion getPotion() {
     logger.debug("getPotion");
-    return this.pot;
-  }
+    return this.potion;
+  }*/
 
   /**
    * フィールド変数：potのsetter.
    */
-  public void setPotion(PotionType pot) {
+/*  public void setPotion(Potion pot) {
     logger.debug("setPotion");
-    this.pot = pot;
-  }
+    this.potion = pot;
+  }*/
 
   /**
    * フィールド変数：smatのgetter.
@@ -914,4 +980,12 @@ public class StorageSign {
     logger.debug(" This Block isn't StorageSign.");
     return false;
   }
+
+
+
+////////////////////////////////////////////////////////////////////////
+  public void testGetMat(){
+    if(this.info != null) this.mat = this.info.getMaterial();
+  }
+
 }
