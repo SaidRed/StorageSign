@@ -36,7 +36,6 @@ public abstract class InformationAbstract<M extends ItemMeta> implements SSInfor
   /**
    * ブロックStorageSign に表記される文字列
    * [アイテムショートネーム]:[タイプショートネーム]:[コード値]
-   *
    * @return 貯蔵アイテム情報 (SignBlock)
    */
   @Override
@@ -47,17 +46,15 @@ public abstract class InformationAbstract<M extends ItemMeta> implements SSInfor
   /**
    * アイテムStorageSign の Lora に書き込む情報を作成
    * [アイテムフルネーム]:[タイプフルネーム]:[コード値] [アイテム数 amount]
-   *
    * @return 貯蔵アイテム情報 (Lora)
    */
   @Override
-  public String getSSLoraItemData() {
+  public String getSSLoreItemData() {
     return material.toString() + ":" + cord;
   }
 
   /**
-   * StorageSign として排出する貯蔵アイテム ItemStack
-   *
+   * StorageSign として出庫する貯蔵アイテム ItemStack
    * @return Storage ItemStack
    */
   @Override
@@ -74,7 +71,6 @@ public abstract class InformationAbstract<M extends ItemMeta> implements SSInfor
 
   /**
    * アイテムスタックを使ってのアイテム比較
-   *
    * @param itemStack 比較するアイテムスタック
    * @return true 同一と認める/false 同一と認めない
    */
@@ -90,13 +86,12 @@ public abstract class InformationAbstract<M extends ItemMeta> implements SSInfor
 
   /**
    * Lora 文字列を使ってのアイテム比較
-   *
    * @param lora 比較する Lora アイテム情報 [アイテムフルネーム]:[タイプフルネーム]:[コード値]
    * @return true 同一と認める/false 同一と認めない
    */
   @Override
   public boolean isSimilar(String lora) {
-    return lora.startsWith(getSSLoraItemData());
+    return lora.startsWith(getSSLoreItemData());
   }
 
   public Material getMaterial(){

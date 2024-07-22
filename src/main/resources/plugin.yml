@@ -7,6 +7,25 @@ api-version: 1.21.0
 depend: [Logger]
 softdepend: [WorldGuard]
 website: https://github.com/wackyls6/StorageSign
+
+commands:
+    test:
+        description: metadata test .
+        permission-message: You do not have permission to perform this command.
+        usage: /test
+    test2:
+        description: metadata test .
+        permission-message: You do not have permission to perform this command.
+        usage: /test2
+    CustomModelDataSetTest:
+        description: metadata test .
+        permission-message: You do not have permission to perform this command.
+        usage: /CustomModelDataSetTest (main hand item)
+    CustomModelDataGetTest:
+        description: metadata test .
+        permission-message: You do not have permission to perform this command.
+        usage: /CustomModelDataGetTest (main hand item)
+
 permissions:
     storagesign.*:
         description:

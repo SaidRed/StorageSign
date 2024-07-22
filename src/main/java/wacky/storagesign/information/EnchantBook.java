@@ -6,7 +6,6 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.PotionType;
 import wacky.storagesign.ConfigLoader;
 
 import java.util.*;
@@ -27,7 +26,6 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
 
   /**
    * メタデータからエンチャントタイプを取得する
-   *
    * @param meta エンチャントタイプを取得したいメタデータ
    * @return エンチャントタイプデータ
    */
@@ -37,7 +35,6 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
 
   /**
    * SS 表記の名前から エンチャント名を取得
-   *
    * @param substring エンチャント名 (ショートネーム可)
    * @return エンチャント名
    */
@@ -51,7 +48,6 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
 
   /**
    * メタデータからエンチャントタイプ名を取得する
-   *
    * @param meta エンチャントタイプ名を取得したいメタデータ
    * @return エンチャントタイプ名
    */
@@ -61,7 +57,6 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
 
   /**
    * エンチャントタイプ の文字列
-   *
    * @return エンチャントタイプ
    */
   private String getEnchantmentName() {
@@ -71,7 +66,6 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
 
   /**
    * エンチャントタイプ の文字列 ショートネーム
-   *
    * @return エンチャントタイプ ショートネーム
    */
   public String getEnchantmentShortName() {
@@ -112,7 +106,6 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
 
   /**
    * StorageSign で使われる コード値取得
-   *
    * @param meta Cord値 を取得したい ItemMeta
    * @return Cord値
    */
@@ -123,7 +116,6 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
 
   /**
    * メタデータからエンチャントレベルを取得する
-   *
    * @param meta エンチャントレベルを取得したいメタデータ
    * @return エンチャントレベル
    */
@@ -134,7 +126,6 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
 
   /**
    * ItemMeta に コード値 を設定
-   *
    * @param meta セットしたい ItemMeta
    * @param cord セットしたい Cord値
    * @return Cord値 をセットし終わった itemMeta
@@ -148,7 +139,6 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
   /**
    * ブロックStorageSign に表記される文字列
    * <p>[アイテムショートネーム]:[タイプショートネーム]:[コード値]</p>
-   *
    * @return SS 表記の文字列
    */
   @Override
@@ -158,20 +148,18 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
   }
 
   /**
-   * アイテムStorageSign の Lora に書き込む情報を作成
+   * アイテムStorageSign の Lore に書き込む情報を作成
    * <p>[アイテムフルネーム]:[タイプフルネーム]:[コード値] [アイテム数 amount]</p>
-   *
-   * @return Lora 文字列
+   * @return Lore 文字列
    */
   @Override
-  public String getSSLoraItemData() {
+  public String getSSLoreItemData() {
     logger.debug("getSSLoraItemData: Start");
     return material.toString() + ":" + itemType.getKey().getKey() + ":" + cord;
   }
 
   /**
    * StorageSign としてのドロップ ItemStack
-   *
    * @param material SS の Sign 種類指定
    * @return SS ItemStack
    */
@@ -182,7 +170,7 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
 
     ItemMeta meta = item.getItemMeta();
     Objects.requireNonNull(meta).setDisplayName(STORAGE_SIGN_NAME);
-    meta.setLore(new ArrayList<String>(Collections.singletonList(getSSLoraItemData())));
+    meta.setLore(new ArrayList<String>(Collections.singletonList(getSSLoreItemData())));
     meta.setMaxStackSize(ConfigLoader.getMaxStackSize());
 
     item.setItemMeta(meta);
@@ -190,8 +178,7 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
   }
 
   /**
-   * StorageSign として排出する貯蔵アイテム ItemStack
-   *
+   * StorageSign として出庫する貯蔵アイテム ItemStack
    * @return Storage ItemStack
    */
   @Override
@@ -210,7 +197,6 @@ public class EnchantBook extends InformationAbstract<EnchantmentStorageMeta> imp
 
   /**
    * アイテムスタックを使ってのアイテム比較
-   *
    * @param itemStack 比較するアイテムスタック
    * @return true 同一と認める/false 同一と認めない
    */

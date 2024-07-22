@@ -1,10 +1,7 @@
 package wacky.storagesign.information;
 
 import com.github.teruteru128.logger.Logger;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockBase;
 import org.bukkit.Material;
-import org.bukkit.block.BlockState;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
@@ -24,79 +21,59 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
   private static final Material material = Material.ENCHANTED_BOOK;
   private static final String SS_ITEM_NAME = "ENCHBOOK";
 
-  /**
-   * メタデータからエンチャントタイプを取得する
-   *
-   * @param meta エンチャントタイプを取得したいメタデータ
-   * @return エンチャントタイプデータ
-   */
-  private static Enchantment getEnchantment(EnchantmentStorageMeta meta) {
-    return meta.getStoredEnchants().keySet().toArray(new Enchantment[0])[0];
+  public EnchantedBook(String itemData, Logger logger){
+    this(getEnchantment(itemData.split(":")[1]),
+            Integer.parseInt(itemData.split("[: ]")[2]), logger);
   }
 
-  /**
-   * メタデータからエンチャントレベルを取得する
-   *
-   * @param meta エンチャントレベルを取得したいメタデータ
-   * @return エンチャントレベル
-   */
-  private static int getEnchantLevel(EnchantmentStorageMeta meta) {
-    Enchantment enchantment = getEnchantment(meta);
-    return meta.getStoredEnchantLevel(enchantment);
+  public EnchantedBook(ItemStack itemStack, Logger logger){
+    this(getEnchantment(itemStack.getItemMeta()), getLevel(itemStack.getItemMeta()), logger);
   }
 
+  public EnchantedBook(Enchantment type, int cord, Logger logger) {
+    super(Material.ENCHANTED_BOOK, type, cord, logger);
+  }
+
+
   /**
-   * SS 表記の名前から エンチャント名を取得
-   *
-   * @param substring エンチャント名 (ショートネーム可)
+   * SS 表記の名前から エンチャントタイプを取得
+   * @param enchantName エンチャント名 (ショートネーム可)
    * @return エンチャント名
    */
-  private static Enchantment getEnchantment(String substring) {
+  private static Enchantment getEnchantment(String enchantName) {
     //後ろ切れても可.
     return org.bukkit.Bukkit.getRegistry(Enchantment.class).stream()
-            .filter(E->E.getKey().getKey().startsWith(substring))
+            .filter(E->E.getKey().getKey().startsWith(enchantName))
             .findFirst()
             .orElse(null);
   }
 
-  public EnchantedBook(String SSItemData, Logger logger){
-    this(SSItemData.split("[: ]"),logger);
+  /**
+   * メタデータからエンチャントタイプを取得
+   * @param meta エンチャントタイプを取得したいメタデータ
+   * @return エンチャントタイプデータ
+   */
+  private static Enchantment getEnchantment(ItemMeta meta) {
+    EnchantmentStorageMeta enchant = (EnchantmentStorageMeta) meta;
+    return enchant.getStoredEnchants().keySet().toArray(new Enchantment[0])[0];
   }
 
-  private EnchantedBook(String[] SSItemData, Logger logger){
-    this(SSItemData[1],SSItemData[2],logger);
+  /**
+   * メタデータからエンチャントレベルを取得
+   * @param meta エンチャントレベルを取得したいメタデータ
+   * @return エンチャントレベル
+   */
+  private static int getLevel(ItemMeta meta) {
+    EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta) meta;
+    Enchantment enchantment = getEnchantment(meta);
+    return enchantMeta.getStoredEnchantLevel(enchantment);
   }
-
-  public EnchantedBook(String enchantName, String cord, Logger logger){
-    this(material,getEnchantment(enchantName), Integer.parseInt(cord),logger);
-  }
-
-  public EnchantedBook(String enchantName, int cord, Logger logger){
-    this(material,getEnchantment(enchantName),cord,logger);
-  }
-
-  public EnchantedBook(ItemStack itemStack, Logger logger){
-    this((EnchantmentStorageMeta) itemStack.getItemMeta(),logger);
-  }
-
-  public EnchantedBook(EnchantmentStorageMeta meta, Logger logger){
-    this(material,getEnchantment(meta),getEnchantLevel(meta),logger);
-  }
-
-  public EnchantedBook(Material material, Enchantment type, int cord, Logger logger) {
-    super(material, type, cord, logger);
-  }
-
-
-
-
 
 
   /**
-   * アイテムStorageSign の Lora に書き込む アイテムフルネーム
+   * アイテムStorageSign の Lore に書き込む アイテムフルネーム
    * <p>[アイテムフルネーム]:[タイプフルネーム]:[コード値] [アイテム数 amount]</p>
-   *
-   * @return Lora 文字列
+   * @return Lore 文字列
    */
   @Override
   protected String getStorageItemName() {
@@ -106,7 +83,6 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
   /**
    * ブロックStorageSign に表記される アイテムショートネーム
    * <p>[アイテムショートネーム]:[タイプショートネーム]:[コード値]</p>
-   *
    * @return SS 表記の文字列
    */
   @Override
@@ -115,10 +91,9 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
   }
 
   /**
-   * アイテムStorageSign の Lora に書き込む タイプフルネーム
+   * アイテムStorageSign の Lore に書き込む タイプフルネーム
    * <p>[アイテムフルネーム]:[タイプフルネーム]:[コード値] [アイテム数 amount]</p>
-   *
-   * @return Lora 文字列
+   * @return Lore 文字列
    */
   @Override
   protected String getTypeName() {
@@ -128,7 +103,6 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
   /**
    * ブロックStorageSign に表記される タイプショートネーム
    * <p>[アイテムショートネーム]:[タイプショートネーム]:[コード値]</p>
-   *
    * @return SS 表記の文字列
    */
   @Override
@@ -140,24 +114,25 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
 
   /**
    * StorageSign で使われる コード値取得
-   *
+   * [コード値] 部分に登録する値を戻す値にする
+   * <p>[アイテムショートネーム]:[コード値]</p>
    * @param meta Cord値 を取得したい ItemMeta
    * @return Cord値
    */
   @Override
   protected int getCord(EnchantmentStorageMeta meta) {
-    return getEnchantLevel(meta);
+    return getLevel(meta);
   }
 
   /**
    * ItemMeta に コード値 を設定
-   *
+   * [コード値] 部分を参照して ItemMeta に情報を追加する
+   * <p>[アイテムショートネーム]:[コード値]</p>
    * @param meta セットしたい ItemMeta
-   * @param cord セットしたい Cord値
    * @return Cord値 をセットし終わった itemMeta
    */
   @Override
-  protected ItemMeta setCord(EnchantmentStorageMeta meta, int cord) {
+  protected ItemMeta setCord(EnchantmentStorageMeta meta) {
     meta.addStoredEnchant(type, cord,true);
     return meta;
   }

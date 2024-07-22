@@ -4,9 +4,18 @@ import com.github.teruteru128.logger.Logger;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * SSと情報をやり取りするシステム
+ * ItemStack や String に関しては 継承クラスにて
+ * cord値 を拾ったり
+ * ItemMeta#getLore や BlockState#SignSide#Line[1] から情報拾う必要があるので用意しておく
+ */
 public class NormalInformation implements SSInformation {
 
-  protected final Material material;
+  /**
+   * 収納されているアイテム情報
+   */
+  protected Material content;
   protected final Logger logger;
 
   public NormalInformation(ItemStack itemStack, Logger logger) {
@@ -18,68 +27,58 @@ public class NormalInformation implements SSInformation {
   }
 
   public NormalInformation(Material material, Logger logger){
-    this.material = material;
+    this.content = material;
     this.logger = logger;
   }
 
   /**
    * ブロックStorageSign に表記される文字列
    * [アイテムショートネーム]
-   *
    * @return 貯蔵アイテム情報 (SignBlock)
    */
   @Override
   public String getSSStorageItemData() {
-    return getSSLoraItemData();
+    return getSSLoreItemData();
   }
 
   /**
-   * アイテムStorageSign の Lora に書き込む情報を作成
+   * アイテムStorageSign の Lore に書き込む情報を作成
    * [アイテムフルネーム] [アイテム数 amount]
-   *
-   * @return 貯蔵アイテム情報 (Lora)
+   * @return 貯蔵アイテム情報 (Lore)
    */
   @Override
-  public String getSSLoraItemData() {
-    return material.toString();
+  public String getSSLoreItemData() {
+    return content.toString();
   }
 
   /**
-   * StorageSign として排出する貯蔵アイテム ItemStack
-   *
+   * StorageSign として出庫する貯蔵アイテム ItemStack
    * @return Storage ItemStack
    */
   @Override
   public ItemStack getStorageItemStack() {
     logger.debug("getStorageItemStack: Start");
-    return new ItemStack(material);
+    return new ItemStack(content);
   }
 
   /**
    * アイテムスタックを使ってのアイテム比較
-   *
    * @param itemStack 比較するアイテムスタック
    * @return true 同一と認める/false 同一と認めない
    */
   @Override
   public boolean isSimilar(ItemStack itemStack) {
-    return material == itemStack.getType();
+    return content.equals(itemStack.getType());
   }
 
   /**
-   * Lora 文字列を使ってのアイテム比較
-   *
-   * @param lora 比較する Lora アイテム情報 [アイテムフルネーム]:[タイプフルネーム]:[コード値]
+   * Lore 文字列を使ってのアイテム比較
+   * @param lore 比較する Lore
    * @return true 同一と認める/false 同一と認めない
    */
   @Override
-  public boolean isSimilar(String lora) {
-    return lora.startsWith(getSSLoraItemData());
-  }
-
-  @Override
-  public Material getMaterial() {
-    return this.material;
+  public boolean isSimilar(String lore) {
+    return lore.startsWith(getSSLoreItemData());
   }
 
 }

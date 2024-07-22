@@ -3,11 +3,8 @@ package wacky.storagesign;
 import com.github.teruteru128.logger.Logger;
 import lombok.Getter;
 import org.bukkit.Material;
-import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.util.NumberConversions;
-
-import java.util.Arrays;
 
 public class EnchantInfo {
 

@@ -1,6 +1,7 @@
 package wacky.storagesign;
 
 import org.bukkit.Material;
+import org.checkerframework.checker.fenum.qual.FenumTop;
 
 import java.util.Map;
 
@@ -23,10 +24,13 @@ public class VersionConverter {
           entry("DANDELION_YELLOW", YELLOW_DYE),
           entry("CACTUS_GREEN", GREEN_DYE),
           entry("OMINOUS_BOTTLE", OMINOUS_BOTTLE),
-          //SS オリジナル名
+          // SS オリジナル名
           entry("ENCHBOOK", ENCHANTED_BOOK),
           entry("SPOTION", SPLASH_POTION),
-          entry("LPOTION", LINGERING_POTION)
+          entry("LPOTION", LINGERING_POTION),
+          // SS オリジナル名 Empty表記
+          entry("Empty",AIR),
+          entry("",AIR)
   );
 
   /**
@@ -110,7 +114,7 @@ public class VersionConverter {
    * @return 存在したら変換 / 見つからなかったら元の Material を返還
    */
   public static Material SSItemNameConverter(String itemName,int cord){
-    return SSItemNameVersionStraddle(SSItemNameConverter(itemName),cord);
+    return SSItemNameVersionStraddle(SSItemNameConverter(itemName.split(":")[0]),cord);
   }
 
 }

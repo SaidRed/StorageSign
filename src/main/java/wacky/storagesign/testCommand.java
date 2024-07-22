@@ -2,7 +2,7 @@ package wacky.storagesign;
 
 import static org.bukkit.Bukkit.getLogger;
 
-import com.github.teruteru128.logger.Logger;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -11,10 +11,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
-import wacky.storagesign.information.EnchantedBook;
+import wacky.storagesign.information.Potion;
 
-import java.lang.reflect.Constructor;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class testCommand implements CommandExecutor {
   Player player;
@@ -46,24 +49,49 @@ public class testCommand implements CommandExecutor {
     };
   }
   protected boolean test(){
-    getLogger().info("test: CHERRY_SIGN :" + StorageSignV2.isSign(Material.CHERRY_SIGN));
+    String name = "DarkOakStorageSign";
+    String[] machi = name.split("(?<=[a-z])(?=[A-Z])");
+    String NAME = Arrays.stream(machi)
+            .filter(T->! T.equals("Storage"))
+            .map(String::toUpperCase)
+            .collect(Collectors.joining("_"));
+    Material m1 = Material.getMaterial(NAME);
+    String s = Arrays.stream(
+            "DarkOakStorageSign".replace(StorageSignConfig.STORAGE_SIGN_NAME,"Sign")
+                    .split("(?<=[a-z])(?=[A-Z])"))
+            .map(String::toUpperCase)
+            .collect(Collectors.joining("_"));
+
+    String NP = Material.POTION.toString().replaceAll("(?<=^.).*?_","");
+    String SP = Material.SPLASH_POTION.toString().replaceAll("(?<=^.).*?_","");
+    String LP = Material.LINGERING_POTION.toString().replaceAll("(?<=^.).*?_","");
+    String potionPrefix = Potion.delPrefixPattern();
+    String TP = PotionType.WATER_BREATHING.getKey().getKey().replaceAll(Potion.delPrefixPattern(),"");
+
+    //    String name = Material.DARK_OAK_SIGN.toString();
+/*    String names = Arrays.asList(name.split("_"))
+            .stream()
+            .filter(T->! (T.equals("SIGN") || T.equals("HANGING")))
+            .map(String::toLowerCase)
+            .map(StringUtils::capitalize)
+            .collect(Collectors.joining());*/
+
+/*    getLogger().info("test: CHERRY_SIGN :" + StorageSignV2.isSign(Material.CHERRY_SIGN));
     getLogger().info("test: ENCHANTED_BOOK :" + StorageSignV2.isSign(Material.ENCHANTED_BOOK));
     getLogger().info("test: CHERRY_WALL_SIGN :" + StorageSignV2.isSign(Material.CHERRY_WALL_SIGN));
     getLogger().info("test: CHERRY_HANGING_SIGN :" + StorageSignV2.isSign(Material.CHERRY_HANGING_SIGN));
     getLogger().info("test: CHERRY_WALL_HANGING_SIGN :" + StorageSignV2.isSign(Material.CHERRY_WALL_HANGING_SIGN));
+
+    Block block = player.getTargetBlock((Set) null, 3);
+    getLogger().info("test: TargetBlock.Type :" + block.getType());
+    getLogger().info("test: TargetBlock :" + StorageSignV2.isSign(block.getType()));//*/
     return true;
   }
 
-  public enum ttt{
-    test(EnchantedBook.class);
-
-    public Class<EnchantedBook> ench;
-    ttt(Class<EnchantedBook> t){
-      this.ench = t;
-    }
-  }
   protected boolean test2() {
-    getLogger().info("test2: CHERRY_SIGN isAss Sign : "
+    Potion.getPotionType("");
+
+/*    getLogger().info("test2: CHERRY_SIGN isAss Sign : "
             + Material.CHERRY_SIGN.data.isAssignableFrom(org.bukkit.block.data.type.Sign.class));
     getLogger().info("test2: CHERRY_WALL_HANGING_SIGN isAss Sign : "
             + Material.CHERRY_HANGING_SIGN.data.isAssignableFrom(org.bukkit.block.data.type.Sign.class));
@@ -79,7 +107,7 @@ public class testCommand implements CommandExecutor {
     getLogger().info("test2: CHERRY_HANGING_SIGN isAss HangingSign : "
             + StorageSignV2.isSign(Material.CHERRY_HANGING_SIGN));
     getLogger().info("test2: CHERRY_WALL_HANGING_SIGN isAss HangingSign : "
-            + StorageSignV2.isSign(Material.CHERRY_WALL_HANGING_SIGN));
+            + StorageSignV2.isSign(Material.CHERRY_WALL_HANGING_SIGN));*/
 
 /*    Constructor<?>[] b = ttt.test.ench.getConstructors();
     try {

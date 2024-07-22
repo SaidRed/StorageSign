@@ -1,12 +1,19 @@
 package wacky.storagesign;
 
 import org.bukkit.Material;
+import org.bukkit.potion.PotionType;
+
 import java.util.Map;
+import java.util.Set;
 
 import static java.util.Map.entry;
 import static org.bukkit.Material.*;
 
 public class StorageSignConfig {
+
+  public static final String STORAGE_SIGN_NAME = "StorageSign";
+  public static final String empty = "Empty";
+  public static final int CORD_STORAGE_SIGN = 55;
 
   /**
    * SSオリジナル名称
@@ -14,7 +21,9 @@ public class StorageSignConfig {
   private static final Map<String, Material> SSOriginalItemNameConvertMap = Map.ofEntries(
           entry("ENCHBOOK",ENCHANTED_BOOK),
           entry("SPOTION",SPLASH_POTION),
-          entry("LPOTION",LINGERING_POTION)
+          entry("LPOTION",LINGERING_POTION),
+          // SS オリジナル名 Empty表記
+          entry(empty,AIR)
   );
 
   /**
@@ -55,12 +64,27 @@ public class StorageSignConfig {
   );
 
   /**
+   * SSオリジナル PotionType 表記一覧
+   * newName : 新名称
+   * oldName : 旧名称
+   */
+  private static final Set<potionTypeData> originalPotionTypeName = Set.of(
+          new potionTypeData("HEAL", PotionType.HEALING),
+          new potionTypeData("DAMAG", PotionType.HARMING),
+          new potionTypeData("JUMP", PotionType.LEAPING),
+          new potionTypeData("SPEED", PotionType.SWIFTNESS),
+//          new potionTypeData("REGEN", PotionType.REGENERATION),
+          new potionTypeData("BREAT", PotionType.WATER_BREATHING)
+  );
+  private record potionTypeData (String oldName,PotionType newName){}
+
+  /**
    * オリジナルアイテム名を使用しているアイテムのコンバーター
    * @param itemName SS オリジナル名
    * @return 対応する Material データ
    */
   public static Material SSOriginalItemNameConverter(String itemName){
-    return SSOriginalItemNameConvertMap.get(itemName);
+    return SSOriginalItemNameConvertMap.getOrDefault(itemName, matchMaterial(itemName));
   }
 
   /**
@@ -70,7 +94,7 @@ public class StorageSignConfig {
    * @return 存在したら変換 / 見つからなかったら現在の Materialで検索をしてみる
    */
   public static Material SSOldItemNameConvert(String itemName){
-    return OldItemNameConvertMap.getOrDefault(itemName, matchMaterial(itemName));
+    return OldItemNameConvertMap.getOrDefault(itemName, SSOriginalItemNameConverter(itemName));
   }
 
   /**
@@ -93,7 +117,7 @@ public class StorageSignConfig {
    * @return 存在したら変換 / 見つからなかったら元の Material を返還
    */
   public static Material SSItemNameVersionStraddle(String itemName,int cord){
-    return SSItemNameVersionStraddle(SSOldItemNameConvert(itemName),cord);
+    return SSItemNameVersionStraddle(SSOldItemNameConvert(itemName.split(":")[0]),cord);
   }
 
 }

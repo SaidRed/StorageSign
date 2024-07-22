@@ -5,7 +5,8 @@ import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public abstract class TypeInformation<T extends Keyed,M extends ItemMeta> extends CordInformation<M>{
+public abstract class TypeInformation<T extends Keyed, M extends ItemMeta> extends CordInformation<M> implements SSInformation{
+
   protected T type;
 
   public TypeInformation(Material material, T type, int cord, Logger logger) {
@@ -63,7 +64,7 @@ public abstract class TypeInformation<T extends Keyed,M extends ItemMeta> extend
    * @return Lora 文字列
    */
   @Override
-  public String getSSLoraItemData() {
+  public String getSSLoreItemData() {
     return getStorageItemName() + ":" + getTypeName() + ":" + cord;
   }
 

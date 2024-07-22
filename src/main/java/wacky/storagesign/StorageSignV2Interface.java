@@ -19,7 +19,7 @@ public interface StorageSignV2Interface {
    * @param sneaking スニークしているか true : スニーク中 / false : スニークしていない
    * @return 在庫しているアイテムの ItemStack
    */
-  ItemStack getStorageItem(boolean sneaking);
+  ItemStack outputContentItem(boolean sneaking);
 
   /**
    * itemStack の入庫を挑戦する
@@ -29,7 +29,7 @@ public interface StorageSignV2Interface {
    * @param itemStack 入庫するアイテム
    * @return 入庫の有無 true : 入庫完了 / false : 入庫失敗
    */
-  boolean importItemStack(ItemStack itemStack);
+  boolean importContentItem(ItemStack itemStack);
 
   /**
    * 入庫しているアイテムと同一かの判定
@@ -38,7 +38,7 @@ public interface StorageSignV2Interface {
    * @param itemStack 入庫アイテムと比較する ItemStack
    * @return  true：同一と認める / false：同一と認めない
    */
-  boolean isStorageItemEquals(ItemStack itemStack);
+  boolean isContentItemEquals(ItemStack itemStack);
 
   /**
    * StrageSign の倉庫が空かを確認します.

@@ -407,7 +407,7 @@ public class StorageSign {
   protected String getShortName() {
     logger.debug("getShortName:start");
 
-    testGetMat();
+//    testGetMat();
     // 2行目の記載内容
     logger.trace("this.mat=" + mat);
     if (this.mat == null || this.mat == AIR) {
@@ -523,7 +523,7 @@ public class StorageSign {
     } else {
 //      logger.debug("other");
       //list.add(getShortName() + " " + this.amount);
-      list.add(this.info.getSSLoraItemData() + " " + this.amount);
+      list.add(this.info.getSSLoreItemData() + " " + this.amount);
 
     }
     logger.debug("getStorageSign:end");
@@ -984,8 +984,8 @@ public class StorageSign {
 
 
 ////////////////////////////////////////////////////////////////////////
-  public void testGetMat(){
-    if(this.info != null) this.mat = this.info.getMaterial();
-  }
+/*  public void testGetMat(){
+    if(this.info != null) this.mat = this.info.getContent();
+  }*/
 
 }

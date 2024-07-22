@@ -7,7 +7,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Objects;
 
-public abstract class CordInformation<M extends ItemMeta> extends NormalInformation{
+public abstract class CordInformation<M extends ItemMeta> extends NormalInformation implements SSInformation{
   protected final int cord;
 
   public CordInformation(Material material, int cord, Logger logger) {
@@ -17,6 +17,8 @@ public abstract class CordInformation<M extends ItemMeta> extends NormalInformat
 
   /**
    * StorageSign で使われる コード値取得
+   * [コード値] 部分に登録する値を戻す値にする
+   * <p>[アイテムショートネーム]:[コード値]</p>
    * @param meta Cord値 を取得したい ItemMeta
    * @return Cord値
    */
@@ -24,11 +26,12 @@ public abstract class CordInformation<M extends ItemMeta> extends NormalInformat
 
   /**
    * ItemMeta に コード値 を設定
+   * [コード値] 部分を参照して ItemMeta に情報を追加する
+   * <p>[アイテムショートネーム]:[コード値]</p>
    * @param meta セットしたい ItemMeta
-   * @param cord セットしたい Cord値
    * @return Cord値 をセットし終わった itemMeta
    */
-  protected abstract ItemMeta setCord(M meta, int cord);
+  protected abstract ItemMeta setCord(M meta);
 
   /**
    * ブロックStorageSign に表記される文字列
@@ -38,7 +41,7 @@ public abstract class CordInformation<M extends ItemMeta> extends NormalInformat
    */
   @Override
   public String getSSStorageItemData() {
-    return  getSSLoraItemData();
+    return  getSSLoreItemData();
   }
 
   /**
@@ -48,36 +51,34 @@ public abstract class CordInformation<M extends ItemMeta> extends NormalInformat
    * @return 貯蔵アイテム情報 (Lora)
    */
   @Override
-  public String getSSLoraItemData() {
-    return material.toString() + ":" + cord;
+  public String getSSLoreItemData() {
+    return content.toString() + ":" + cord;
   }
 
   /**
-   * StorageSign として排出する貯蔵アイテム ItemStack
-   *
+   * StorageSign として出庫する貯蔵アイテム ItemStack
    * @return Storage ItemStack
    */
   @Override
   public ItemStack getStorageItemStack() {
     logger.debug("getStorageItemStack: Start");
-    ItemStack item = new ItemStack(material);
+    ItemStack item = new ItemStack(content);
 
     logger.debug("Level: " + cord);
     M meta = (M) item.getItemMeta();
-    item.setItemMeta(setCord(meta,cord));
+    //item.setItemMeta(setCord(meta));
 
     return item;
   }
 
   /**
    * アイテムスタックを使ってのアイテム比較
-   *
    * @param itemStack 比較するアイテムスタック
    * @return true 同一と認める/false 同一と認めない
    */
   @Override
   public boolean isSimilar(ItemStack itemStack) {
-    if(!(material.equals(itemStack.getType())))return false;
+    if(!(content.equals(itemStack.getType())))return false;
 
     ItemMeta meta = itemStack.getItemMeta();
     if(Objects.isNull(meta)) return false;
