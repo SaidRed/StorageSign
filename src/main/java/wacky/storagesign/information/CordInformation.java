@@ -1,6 +1,7 @@
 package wacky.storagesign.information;
 
 import com.github.teruteru128.logger.Logger;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -66,7 +67,7 @@ public abstract class CordInformation<M extends ItemMeta> extends NormalInformat
 
     logger.debug("Level: " + cord);
     M meta = (M) item.getItemMeta();
-    //item.setItemMeta(setCord(meta));
+    item.setItemMeta(setCord(meta));
 
     return item;
   }
