@@ -111,9 +111,17 @@ public class StorageSignPlayerEvent implements Listener {
           } else if (clickBlockSSData.isSimilar(itemMainHand)) {
             // Block SS Content == Item SS Contents
             // 手持ちStorageSign の中身を StorageSign に入庫
-            if (clickBlockSSData.importContentItem(itemMainHand)) {
-              playerInventory.clear(playerInventory.getHeldItemSlot());
+            if(player.isSneaking()) {
+              if (clickBlockSSData.importContentItem(itemMainHand)) {
+                playerInventory.clear(playerInventory.getHeldItemSlot());
 
+              }
+            }else{
+              for(ItemStack item:playerInventory.getContents()){
+                if (item != null && clickBlockSSData.importContentItem(item)){
+                  playerInventory.remove(item);
+                }
+              }
             }
 
           } else {
