@@ -1,8 +1,8 @@
 package wacky.storagesign;
 
 import com.github.teruteru128.logger.Logger;
-import net.minecraft.references.Items;
 import org.apache.logging.log4j.LogManager;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -10,9 +10,11 @@ import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import wacky.storagesign.information.*;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
@@ -23,7 +25,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
   private static final org.apache.logging.log4j.Logger log = LogManager.getLogger(StorageSign.class);
 
   /**
-   * 看板のアイテム素材.
+   * StorageSignのアイテム素材.
    */
   protected Material materialSign;
 
@@ -109,21 +111,18 @@ public class StorageSignV2 implements StorageSignV2Interface {
     this.logger = logger;
 
     // 文字無しの場合は Empty と 同じ処理にするために代入
-    if(itemData.isEmpty()) itemData = StorageSignConfig.empty;
+    if(itemData.isEmpty()) itemData = StorageSignConfig.defaultData.empty;
 
     this.amount = amount;
 
     // ***StorageSign だった場合
-    if(itemData.endsWith(StorageSignConfig.STORAGE_SIGN_NAME)){
+    if(itemData.endsWith(StorageSignConfig.defaultData.STORAGE_SIGN_NAME)){
       info = new StorageSignInfo(itemData,logger);
       return;
     }
 
-    //
-    this.materialContent = StorageSignConfig.SSOriginalItemNameConverter(itemData);
-
     // SS特殊itemData などを含めた Material変換器 通す
-    this.materialContent = StorageSignConfig.SSItemNameVersionStraddle(itemData, cord);
+    this.materialContent = StorageSignConfig.defaultData.getNewItemName(itemData.split(":")[0]);
 
     // Content 登録されていない場合 AIR で登録
     if(Objects.isNull(materialContent) || Material.AIR.equals(materialContent)){
@@ -132,14 +131,41 @@ public class StorageSignV2 implements StorageSignV2Interface {
       return;
     }
 
+    /*
     // Material によって登録informationを切り替える
     this.info = switch (materialContent) {
       case OMINOUS_BOTTLE -> new OminousBottle(itemData, logger);
       case ENCHANTED_BOOK -> new EnchantedBook(itemData, logger);
       case FIREWORK_ROCKET -> new FireworkRocket(itemData, logger);
       case POTION, SPLASH_POTION, LINGERING_POTION -> new Potion(itemData, logger);
-      default -> new NormalInformation(itemData, logger);
-    };
+      default -> {
+        if(StorageSignConfig.isSSItemNameVersionStraddle(materialContent)){
+          yield new VersionStraddle(itemData, logger);
+        }
+        if(itemData.split(":").length == 2){
+          yield new ToolInformation(itemData, logger);
+        }
+        yield new NormalInformation(itemData, logger);
+      }
+    };*/
+    if(StorageSignConfig.informationData.containsKey(materialContent)){
+      Class<? extends SSInformation> info = StorageSignConfig.informationData.get(materialContent);
+      try{
+        this.info = info.getConstructor(String.class,Logger.class).newInstance(itemData, logger);
+      } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
+        throw new RuntimeException(e);
+      }
+      return;
+    }
+    if(StorageSignConfig.versionConvert.containsKey(materialContent)){
+      this.info = new VersionStraddle(itemData, logger);
+      return;
+    }
+    if(itemData.split(":").length == 2) {
+      this.info = new ToolInformation(itemData, logger);
+      return;
+    }
+    this.info = new NormalInformation(itemData, logger);
 
   }
 
@@ -164,8 +190,9 @@ public class StorageSignV2 implements StorageSignV2Interface {
   public ItemStack getStorageSign(){
     ItemStack itemStack = new ItemStack(materialSign);
     ItemMeta meta = itemStack.getItemMeta();
-    Objects.requireNonNull(meta).setDisplayName(StorageSignConfig.STORAGE_SIGN_NAME);
-    meta.setLore(List.of(info.getSSLoreItemData()));
+    Objects.requireNonNull(meta).setDisplayName(StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
+    if(isContentEmpty())clear();
+    meta.setLore(List.of(info.getSSLoreItemData() + (materialContent.equals(Material.AIR) ? "" : " " + amount)));
     meta.setMaxStackSize(ConfigLoader.getMaxStackSize());
     itemStack.setItemMeta(meta);
     return itemStack;
@@ -196,7 +223,11 @@ public class StorageSignV2 implements StorageSignV2Interface {
   public boolean setStorageSignData(ItemStack storageSign){
 //    if(! isStorageSign(storageSign))return false;
     ItemMeta meta = storageSign.getItemMeta();
-    meta.setLore(List.of(info.getSSLoreItemData()));
+    meta.setLore(List.of(
+            Material.AIR.equals(materialContent) ?
+                    StorageSignConfig.defaultData.empty :
+                    info.getSSLoreItemData() + " " + amount
+    ));
     meta.setMaxStackSize(ConfigLoader.getMaxStackSize());
     storageSign.setItemMeta(meta);
     return true;
@@ -210,7 +241,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
   public boolean setStorageData(Block signBlock){
     if(signBlock.getState() instanceof Sign signState){
       SignSide side = signState.getSide(Side.FRONT);
-      side.setLine(0, StorageSignConfig.STORAGE_SIGN_NAME);
+      side.setLine(0, StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
       side.setLine(1, info.getSSStorageItemData());
       side.setLine(2, String.valueOf(amount));
       side.setLine(3,(this.amount / 3456) + "LC " + (this.amount % 3456 / 64) + "s " + (this.amount % 64));
@@ -229,13 +260,46 @@ public class StorageSignV2 implements StorageSignV2Interface {
         this.info = new StorageSignInfo(itemStack, logger);
         return;
     }
+
+    /*
     this.info = switch (itemStack.getType()){
       case OMINOUS_BOTTLE -> new OminousBottle(itemStack,logger);
       case ENCHANTED_BOOK -> new EnchantedBook(itemStack,logger);
       case FIREWORK_ROCKET -> new FireworkRocket(itemStack,logger);
       case POTION,SPLASH_POTION,LINGERING_POTION -> new Potion(itemStack,logger);
-      default -> new NormalInformation(itemStack,logger);
-    };
+      default -> {
+        if(StorageSignConfig.isSSItemNameVersionStraddle(itemStack.getType())){
+          yield new VersionStraddle(itemStack, logger);
+        }
+        if(! itemStack.getType().data.isAssignableFrom(org.bukkit.block.data.BlockData.class)){
+          if(itemStack.getItemMeta() instanceof Damageable meta){
+            yield new ToolInformation(itemStack, logger);
+          }
+        }
+        yield new NormalInformation(itemStack, logger);
+      }
+    };*/
+    if(StorageSignConfig.informationData.containsKey(itemStack.getType())){
+      Class<? extends SSInformation> info = StorageSignConfig.informationData.get(itemStack.getType());
+      try{
+        this.info = info.getConstructor(ItemStack.class, Logger.class).newInstance(itemStack, logger);
+      } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
+        throw new RuntimeException(e);
+      }
+      return;
+    }
+    if(StorageSignConfig.versionConvert.containsKey(itemStack.getType())){
+      this.info = new VersionStraddle(itemStack, logger);
+      return;
+    }
+    if(! itemStack.getType().isBlock()){
+      if(itemStack.getItemMeta() instanceof Damageable) {
+        this.info = new ToolInformation(itemStack, logger);
+        return;
+      }
+    }
+    this.info = new NormalInformation(itemStack, logger);
+
   }
 
   /**
@@ -261,7 +325,8 @@ public class StorageSignV2 implements StorageSignV2Interface {
     if (Objects.isNull(itemStack)) return false;
     if (Objects.isNull(itemStack.getItemMeta())) return false;
     if (!itemStack.getItemMeta().hasDisplayName()) return false;
-    if (!itemStack.getItemMeta().getDisplayName().equals(StorageSignConfig.STORAGE_SIGN_NAME)) return false;
+    if (!itemStack.getItemMeta().getDisplayName()
+            .equals(StorageSignConfig.defaultData.STORAGE_SIGN_NAME)) return false;
     return itemStack.getItemMeta().hasLore()
             && isStorageSign(itemStack.getType(), itemStack.getItemMeta().getDisplayName()) ;
   }
@@ -286,7 +351,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
    * @return true : is StorageSign / false : not StorageSign
    */
   protected static boolean isStorageSign(Material material, String itemName) {
-    return isSign(material) && itemName.startsWith(StorageSignConfig.STORAGE_SIGN_NAME);
+    return isSign(material) && itemName.startsWith(StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
   }
 
   /**
@@ -307,16 +372,25 @@ public class StorageSignV2 implements StorageSignV2Interface {
   }
 
   /**
+   * 入庫しているアイテムと同一かの判定
+   * エンチャ本は本自身の合成回数を問わない.
+   *
+   * @param itemData 入庫アイテムと比較する ItemData
+   * @return  true：同一と認める / false：同一と認めない
+   */
+  public boolean isContentItemEquals(String itemData) {
+    logger.debug(" isSimilar:start");
+    return info.isSimilar(itemData);
+  }
+
+  /**
    * アイテムStorageSign が同じアイテムを収納したStorageSignであるかを判定
    * 収納数 amount は比較しない
-   * @param storageSign 比較したい アイテムStorageSign
+   * @param itemStack 比較したい アイテム (StorageSign)
    * @return true : 同一と認める / false : 同一と認めない
    */
-  public boolean isSimilar(StorageSignV2 storageSign) {
-    return this.materialSign == storageSign.materialSign &&
-//            this.materialContent == storageSign.materialContent &&
-//            this.cord == storageSign.cord &&
-            this.info.isSimilar(storageSign.info.getSSLoreItemData());
+  public boolean isSimilar(ItemStack itemStack) {
+    return info.isSimilar(itemStack);
   }
 
   /**
@@ -341,10 +415,10 @@ public class StorageSignV2 implements StorageSignV2Interface {
 
   /**
    * ブロックStorageSign から アイテムStorageSign へアイテムを入れる
-   * @param itemSS アイテムStorageSign
+   * @param itemStack 出庫先StorageSign
    * @param sneaking true スニーク / false ノーマル
    */
-  public void SSExchangeExport(StorageSignV2 itemSS, ItemStack itemStack, boolean sneaking){
+  public boolean SSExchangeExport(ItemStack itemStack, boolean sneaking){
     int limit = sneaking ? ConfigLoader.getSneakDivideLimit() : ConfigLoader.getDivideLimit();
 
     int outputAmount = 0;
@@ -356,10 +430,36 @@ public class StorageSignV2 implements StorageSignV2Interface {
       outputAmount = amount / (itemStack.getAmount() + 1);
     }
 
+    if(outputAmount == 0)return false;
     ItemMeta meta = itemStack.getItemMeta();
     meta.setLore(List.of(info.getSSLoreItemData() + " " + outputAmount));
     itemStack.setItemMeta(meta);
     amount -= outputAmount * itemStack.getAmount();
+    return true;
   }
 
+  /**
+   * アイテムStorageSign から ブロックStorageSign へアイテムを入れる
+   * @param itemSS 入庫したい
+   */
+  public boolean SSExchangeExport(StorageSignV2 itemSS, ItemStack itemStack){
+    if(! itemSS.isContentItemEquals(info.getSSLoreItemData())) return false;
+    int stack = itemStack.getAmount();
+    int importAmount = stack * itemSS.amount;
+
+    amount += importAmount;
+    itemSS.clear();
+    itemSS.setStorageSignData(itemStack);
+    return true;
+  }
+
+  /**
+   * SS情報の削除
+   */
+  public void clear(){
+    amount = 0;
+    materialContent = Material.AIR;
+    empty = true;
+    info = new NormalInformation(materialContent, logger);
+  }
 }

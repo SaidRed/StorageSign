@@ -10,6 +10,11 @@ import java.util.Objects;
 
 public abstract class CordInformation<M extends ItemMeta> extends NormalInformation implements SSInformation{
   protected final int cord;
+  /**
+   * ゼロを表するかどうかの設定
+   * true : 表示する / false : 表示しない
+   */
+  protected boolean truncateZero = true;
 
   public CordInformation(Material material, int cord, Logger logger) {
     super(material, logger);
@@ -29,10 +34,9 @@ public abstract class CordInformation<M extends ItemMeta> extends NormalInformat
    * ItemMeta に コード値 を設定
    * [コード値] 部分を参照して ItemMeta に情報を追加する
    * <p>[アイテムショートネーム]:[コード値]</p>
-   * @param meta セットしたい ItemMeta
    * @return Cord値 をセットし終わった itemMeta
    */
-  protected abstract ItemMeta setCord(M meta);
+  protected abstract ItemMeta setCord();
 
   /**
    * ブロックStorageSign に表記される文字列
@@ -53,7 +57,15 @@ public abstract class CordInformation<M extends ItemMeta> extends NormalInformat
    */
   @Override
   public String getSSLoreItemData() {
-    return content.toString() + ":" + cord;
+    return content.toString() + (! truncateZero && cord == 0 ? "" : ":" + cord);
+  }
+
+  /**
+   * 収納しているアイテムのデフォルトメタデータ
+   * @return 収納アイテムのメタデータ
+   */
+  public M getContentItemMeta() {
+    return (M) Bukkit.getServer().getItemFactory().getItemMeta(content);
   }
 
   /**
@@ -65,26 +77,10 @@ public abstract class CordInformation<M extends ItemMeta> extends NormalInformat
     logger.debug("getStorageItemStack: Start");
     ItemStack item = new ItemStack(content);
 
-    logger.debug("Level: " + cord);
-    M meta = (M) item.getItemMeta();
-    item.setItemMeta(setCord(meta));
+    logger.debug("cord: " + cord);
+    if(setCord() != null) item.setItemMeta(setCord());
 
     return item;
-  }
-
-  /**
-   * アイテムスタックを使ってのアイテム比較
-   * @param itemStack 比較するアイテムスタック
-   * @return true 同一と認める/false 同一と認めない
-   */
-  @Override
-  public boolean isSimilar(ItemStack itemStack) {
-    if(!(content.equals(itemStack.getType())))return false;
-
-    ItemMeta meta = itemStack.getItemMeta();
-    if(Objects.isNull(meta)) return false;
-    M TMeta = (M) meta;
-    return cord == getCord(TMeta);
   }
 
 }

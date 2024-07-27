@@ -11,17 +11,33 @@ import wacky.storagesign.StorageSignConfig;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * ポーションの表記ルール
+ * [ポーションカテゴリ_ポーション名]:[ポーションタイプ]:[ポーションタイプ強化値] [ストレージ数]
+ * Category _ potion : potionType : cord[0:Normal/1:Long/2:Strong]
+ */
 public class Potion extends TypeInformation<PotionType, PotionMeta> implements SSInformation {
 
   /**
    * 5文字でタイプ名が同じになるので6文字にするプレフィックス一覧
    */
-  private static final List<String> exPrefix = List.of(
-          "FIRE_"
+  private static final Map<String,Integer> exPrefix = Map.ofEntries(
+          Map.entry("FIRE_",6)
   );
 
   /**
-   * 名前の先頭5文字に問題があって別処理するリスト
+   * 5文字でタイプ名が同じになるので取得する文字数を増やすプレフィックス一覧
+   * @param potionType 確認する potionType名
+   * @return 切り出す文字数
+   */
+  private static int containsExPrefix(String potionType){
+    if(potionType.length()>5 && exPrefix.containsKey(potionType.substring(0,5)))
+      return exPrefix.get(potionType.substring(0,5));
+    return 5;
+  }
+
+  /**
+   * 名前の先頭5文字に問題があるので削除するリスト
    */
   private static final List<String> delPrefix = List.of(
           "WATER_"
@@ -35,20 +51,7 @@ public class Potion extends TypeInformation<PotionType, PotionMeta> implements S
   private static final record cordList(String prefix, Integer cord){}
 
   /**
-   * 5文字でタイプ名が同じになるので6文字にするプレフィックス一覧
-   *
-   * @param potionType 確認する potionType名
-   * @return true 長くする/ false 5文字
-   */
-  private static boolean containsExPrefix(String potionType){
-    for(String prefix:exPrefix)
-      if(potionType.startsWith(prefix))
-        return true;
-    return false;
-  }
-
-  /**
-   * ポーション強化 から コード値を取得する
+   * ポーションタイプ強化 から コード値を取得する
    * @param itemData 変換する強化プレフィックス
    * @return cord値
    */
@@ -75,14 +78,6 @@ public class Potion extends TypeInformation<PotionType, PotionMeta> implements S
     return "^(" + potionCord.stream().map(cordList::prefix).collect(Collectors.joining("|")) + ")";
   }
 
-  /**
-   * 名前の先頭 Prefix を削除するよう Pattern
-   * @return delPrefix 削除用 Pattern
-   */
-  public static String delPrefixPattern(){
-    return "^(" + String.join("|",delPrefix) + ")";
-  }
-
   public Potion(String itemData, Logger logger){
     this(itemData.split("[: ]"),logger);
   }
@@ -107,7 +102,7 @@ public class Potion extends TypeInformation<PotionType, PotionMeta> implements S
    */
   public static Material getPotionCategory(String itemData){
     if(itemData.length() == 6) return Material.POTION;
-    return StorageSignConfig.SSOriginalItemNameConverter(itemData);
+    return StorageSignConfig.defaultData.getOriginalItemName(itemData);
   }
 
   /**
@@ -116,8 +111,10 @@ public class Potion extends TypeInformation<PotionType, PotionMeta> implements S
    * @return PotionType
    */
   public static PotionType getPotionType(String name){
-    return Arrays.stream(PotionType.values())
-            .filter(V -> V.name().replaceAll(delPrefixPattern(),"").startsWith(name))
+    return StorageSignConfig.potionType.containsNewName(name) ?
+    StorageSignConfig.potionType.getPotionType(name) :
+    Arrays.stream(PotionType.values())
+            .filter(V->V.toString().matches("^(" + String.join("|",delPrefix) + ")?" + name + ".*"))
             .findFirst()
             .orElse(PotionType.WATER);
   }
@@ -131,6 +128,9 @@ public class Potion extends TypeInformation<PotionType, PotionMeta> implements S
     return meta.getBasePotionType();
   }
 
+  private PotionType getPotionType() {
+    return getPotionType(getStrongPrefix(cord) + type.toString());
+  }
   /**
    * メタデータ から コード値を取得する
    * @param meta コード値を取得したいメタデータ
@@ -179,10 +179,14 @@ public class Potion extends TypeInformation<PotionType, PotionMeta> implements S
    */
   @Override
   protected String getTypeShortName() {
+    if(StorageSignConfig.potionType.containsOldName(type)) {
+      return StorageSignConfig.potionType.getPotionTypeName(type);
+    }
     String name = type.toString().replaceAll(potionPrefixPattern(),"");
-    name = name.replaceAll(delPrefixPattern(),"");
-    int len = containsExPrefix(name) ? 6 : 5;
-    return name.length() < len ? name : name.substring( 0, len);
+    name = name.replaceAll("^(" + String.join("|",delPrefix) + ")","");
+    int len = containsExPrefix(name);
+    name = name.length() < len ? name : name.substring( 0, len);
+    return name;
   }
 
   /**
@@ -199,13 +203,27 @@ public class Potion extends TypeInformation<PotionType, PotionMeta> implements S
 
   /**
    * ItemMeta に コード値 を参照してポーション強化状態を参照
-   * @param meta セットしたい ItemMeta
    * @return Cord値 をセットし終わった itemMeta
    */
   @Override
-  protected ItemMeta setCord(PotionMeta meta) {
-    meta.setBasePotionType(getPotionType(getStrongPrefix(cord) + type.toString()));
+  protected ItemMeta setCord(){
+    PotionMeta meta = getContentItemMeta();
+    meta.setBasePotionType(getPotionType());
+    meta.clearCustomEffects();
     return meta;
+  }
+
+  /**
+   * アイテムスタックを使ってのアイテム比較
+   * @param itemStack 比較するアイテムスタック
+   * @return true 同一と認める/false 同一と認めない
+   */
+  @Override
+  public boolean isSimilar(ItemStack itemStack) {
+    if(! content.equals(itemStack.getType())) return false;
+    PotionMeta meta = (PotionMeta) itemStack.getItemMeta();
+    if(! meta.getBasePotionType().equals(getPotionType())) return false;
+    return true;
   }
 
 }

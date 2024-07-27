@@ -1,6 +1,5 @@
 package wacky.storagesign;
 
-import java.util.Arrays;
 import java.util.List;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;

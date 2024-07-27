@@ -68,7 +68,9 @@ public class NormalInformation implements SSInformation {
    */
   @Override
   public boolean isSimilar(ItemStack itemStack) {
-    return content.equals(itemStack.getType());
+//    return itemStack.isSimilar(getStorageItemStack());
+    ItemStack i = getStorageItemStack();
+    return itemStack.isSimilar(i);
   }
 
   /**

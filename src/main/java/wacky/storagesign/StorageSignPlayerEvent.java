@@ -14,7 +14,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -25,15 +24,6 @@ import java.util.logging.Level;
 public class StorageSignPlayerEvent implements Listener {
 
   private final Logger logger;
-  private Player player;
-
-  private Block clickBlock;
-  private StorageSignV2 clickBlockSSData;
-
-  private ItemStack itemMainHand;
-  private StorageSignV2 itemMainHandSSData;
-
-  private PlayerInventory playerInventory;
 
   public StorageSignPlayerEvent(StorageSignCore plugin) {
     this.logger = plugin.logger;
@@ -42,12 +32,12 @@ public class StorageSignPlayerEvent implements Listener {
   @EventHandler
   public void onPlayerInteract(PlayerInteractEvent event) {
     logger.debug("★onPlayerInteract: Start");
-    player = event.getPlayer();
+    Player player = event.getPlayer();
 
     logger.trace("player.getGameMode() == GameMode.SPECTATOR:" + (player.getGameMode() == GameMode.SPECTATOR));
     if (player.getGameMode() == GameMode.SPECTATOR) return;
 
-    clickBlock = event.getClickedBlock();
+    Block clickBlock = event.getClickedBlock();
     logger.trace("event.useInteractedBlock() == Result.DENY :" + (event.useInteractedBlock() == Event.Result.DENY));
     logger.trace("event.getAction() == Action.RIGHT_CLICK_AIR:" + (event.getAction() == Action.RIGHT_CLICK_AIR));
     //手持ちがブロックだと叩いた看板を取得できないことがあるとか
@@ -98,8 +88,9 @@ public class StorageSignPlayerEvent implements Listener {
         return;
       }
 
-      clickBlockSSData = new StorageSignV2(clickBlock, logger);
-      itemMainHand = event.getItem();
+      StorageSignV2 clickBlockSSData = new StorageSignV2(clickBlock, logger);
+      ItemStack itemMainHand = event.getItem();
+      PlayerInventory playerInventory = player.getInventory();
 
       logger.debug("Check Event Type.");
       logger.trace("storageSign: " + clickBlockSSData);
@@ -109,7 +100,7 @@ public class StorageSignPlayerEvent implements Listener {
       // 手持ちアイテムが StorageSign かで分岐
       if(StorageSignV2.isStorageSign(itemMainHand)) {
         // 手持ちが StorageSign である
-        itemMainHandSSData = new StorageSignV2(itemMainHand, logger);
+        StorageSignV2 itemMainHandSSData = new StorageSignV2(itemMainHand, logger);
 
         if(itemMainHandSSData.isEmpty()){
           if(clickBlockSSData.isEmpty()){
@@ -117,38 +108,31 @@ public class StorageSignPlayerEvent implements Listener {
             // 手持ちStorageSign を StorageSign に登録
             clickBlockSSData.entryContent(itemMainHand);
 
-          } else if (clickBlockSSData.isSimilar(itemMainHandSSData)) {
+          } else if (clickBlockSSData.isSimilar(itemMainHand)) {
             // Block SS Content == Item SS Contents
             // 手持ちStorageSign の中身を StorageSign に入庫
-            if(clickBlockSSData.importContentItem(itemMainHand)){
+            if (clickBlockSSData.importContentItem(itemMainHand)) {
               playerInventory.clear(playerInventory.getHeldItemSlot());
 
             }
 
-          }else {
+          } else {
             // Block SS In Item -> Item SS Empty
             // 手持ちStorageSign に StorageSign Contents を分割
-            clickBlockSSData.SSExchangeExport(itemMainHandSSData, itemMainHand, player.isSneaking());
+            clickBlockSSData.SSExchangeExport(itemMainHand, player.isSneaking());
+
+          }
+
+        }else{
+          // Block SS In Item is StorageSign <- import SS ItemStack
+          // 手持ちSS の SS内入庫
+          if(clickBlockSSData.SSExchangeExport(itemMainHandSSData,itemMainHand)){
+            clickBlockSSData.setStorageData(clickBlock);
 
           }
 
         }
 
-        //空看板収納
-        /*  logger.debug("Empty Sign store.");
-          logger.trace("player.isSneaking()" + player.isSneaking());
-
-          if(! targetStorageSign.importItemStack(itemMainHand))return;
-
-          player.getInventory().clear(player.getInventory().getHeldItemSlot());
-
-          if (! player.isSneaking()){
-            for (int i = 0; i < player.getInventory().getSize(); i++){
-              ItemStack item = player.getInventory().getItem(i);
-              if (StorageSignV2.isStorageSign())
-            }
-          }*/
-//        clickBlockSSData.isContentItemEquals()
       }else{
         // 手持ちが StorageSign ではない
         if(clickBlockSSData.empty){
@@ -161,15 +145,27 @@ public class StorageSignPlayerEvent implements Listener {
           //アイテム登録
           logger.debug("main hand has " + itemMainHand.getType());
           clickBlockSSData.entryContent(itemMainHand);
-          //clickBlockSSData.setStorageData(clickBlock);
 
         } else if(clickBlockSSData.isContentItemEquals(itemMainHand)) {
           //入庫
           logger.debug("StorageSign Content import.");
-          playerInventory = player.getInventory();
-          if(clickBlockSSData.importContentItem(itemMainHand)){
-            playerInventory.clear(playerInventory.getHeldItemSlot());
-            //clickBlockSSData.setStorageData(clickBlock);
+          if(player.isSneaking()) {
+            if (clickBlockSSData.importContentItem(itemMainHand)) {
+              playerInventory.clear(playerInventory.getHeldItemSlot());
+
+            }
+          }else{
+            /*
+            for(int i = 0; i < playerInventory.getSize(); i++) {
+              if (playerInventory.getItem(i) != null && clickBlockSSData.importContentItem(playerInventory.getItem(i))) {
+                playerInventory.clear(i);
+              }
+            }*/
+            for(ItemStack item:playerInventory.getContents()){
+              if (item != null && clickBlockSSData.importContentItem(item)){
+                playerInventory.remove(item);
+              }
+            }
           }
         } else {
           //出庫
@@ -196,73 +192,24 @@ public class StorageSignPlayerEvent implements Listener {
           }
 
           logger.trace("player.isSneaking(): " + player.isSneaking());
-          ItemStack item = clickBlockSSData.outputContentItem(player.isSneaking());
+          if(! clickBlockSSData.isContentEmpty()) {
+            ItemStack item = clickBlockSSData.outputContentItem(player.isSneaking());
 
-          logger.debug("drop Item.");
-          Location loc = player.getLocation();
-          loc.setY(loc.getY() + 0.5);
-          player.getWorld().dropItem(loc, item);
+            logger.debug("drop Item.");
+            Location loc = player.getLocation();
+            loc.setY(loc.getY() + 0.5);
+            player.getWorld().dropItem(loc, item);
+          }
         }
       }
-      logger.debug("SignTextUpdate.");
-      clickBlockSSData.setStorageData(clickBlock);
 
+      logger.debug("SignTextUpdate.");
       logger.debug("★ItemRegist: End");
+      clickBlockSSData.setStorageData(clickBlock);
       player.updateInventory();
-      return;
 
     }
 
-//      if (clickBlockSSData.isEmpty()){
-//        logger.debug("SS Material Regist.");
-//        logger.trace("itemMainHand:" + itemMainHand);
-//        logger.trace("itemMainHand == null: " + (itemMainHand == null));
-
-
-
-
-
-/*        mat = itemMainHand.getType();
-//        boolean mainHandIsSS = StorageSign.isStorageSign(itemMainHand, logger);
-//        boolean mainHandIsHE = isHorseEgg(itemMainHand);
-//        logger.trace("isStorageSign(itemMainHand): " + mainHandIsSS);
-//        logger.trace("isHorseEgg(itemMainHand): " + mainHandIsHE);
-//        logger.trace("mat: " + mat);
-        if (StorageSign.isStorageSign(itemMainHand, logger)) {*/
-
-//          logger.debug("main hand has StorageSign.");
-//          storageSign.setMaterial(mat);
-//          storageSign.setDamage((short) 1);
-//        } else if (mainHandIsHE) {
-//          logger.debug("main hand has HorseEgg.");
-//          storageSign.setMaterial(Material.END_PORTAL);
-//          storageSign.setDamage((short) 1);
-//        } else if (mat == Material.STONE_SLAB) {
-//          logger.debug("main hand has STONE_SLAB.");
-//          storageSign.setMaterial(mat);
-//          storageSign.setDamage((short) 1);
-//        } else if (mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION) {
-//          logger.debug("main hand has PotionSeries.");
-//          storageSign.info = new Potion(itemMainHand,logger);
-//        } else if (mat == Material.OMINOUS_BOTTLE) {
-//          logger.debug("main hand has OMINOUS_BOTTLE.");
-//          storageSign.setMaterial(mat);
-//          storageSign.setDamage(OmniousBottleInfo.GetAmplifierWithMeta(itemMainHand.getItemMeta()));
-
-//          storageSign.info = new OminousBottle(itemMainHand, logger);
-//        } else if (mat == Material.ENCHANTED_BOOK) {
-//          logger.debug("main hand has EnchantedBook.");
-
-//          EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta) itemMainHand.getItemMeta();
-//          if (enchantMeta.getStoredEnchants().size() == 1) {
-//            storageSign.info = new EnchantedBook(itemMainHand, logger);
-//          }
-//        } else if (mat == Material.FIREWORK_ROCKET) {
-/*          logger.debug("main hand has FireRocket.");
-          storageSign.setMaterial(mat);
-          FireworkMeta fireworkMeta = (FireworkMeta) itemMainHand.getItemMeta();
-          storageSign.setDamage((short) fireworkMeta.getPower());*/
-//          storageSign.info = new FireworkRocket(itemMainHand, logger);
 //        } else if (mat == Material.WHITE_BANNER) {
 //          logger.debug("main hand has WhiteBanner.");
 //          storageSign.setMaterial(mat);
@@ -271,250 +218,8 @@ public class StorageSignPlayerEvent implements Listener {
 //            ominousBannerMeta = bannerMeta;//襲撃バナー登録
 //            storageSign.setDamage((short) 8);
 //          }
-//        } else {
-//          logger.debug("main hand has " + mat);
-//          storageSign.info = new NormalInformation(itemMainHand, logger);
-//          storageSign.setMaterial(mat);
-//          var meta = itemMainHand.getItemMeta();
-
-//          logger.trace("meta instanceof Damageable dam" + (meta instanceof Damageable dam));
-//          if (meta instanceof Damageable dam) {
-//            logger.debug("This Item has Damage.damage:" + dam.getDamage());
-//            storageSign.setDamage((short) dam.getDamage());
-//          }
-
-//        }
-//
-
-
-      //boolean isStorageSign = StorageSign.isStorageSign(itemMainHand, logger);
-      //logger.trace("isStorageSign:" + isStorageSign);
-
-//      if (StorageSignV2.isStorageSign(itemMainHand)) {
-        //看板合成
-//        logger.debug("Item move to User StorageSign");
-
-        //StorageSign itemSign = new StorageSign(itemMainHand, logger);
-
-//        itemMainHandSSData = new StorageSignV2(itemMainHand,logger);
-
-//        logger.trace("itemSign:" + itemSign);
-//        logger.trace("storageSign.getContents().isSimilar(itemSign.getContents()) && config.getBoolean(\n"
-//            + "            \"manual-import\"):" + (storageSign.getContents().isSimilar(itemSign.getContents()) && ConfigLoader.getManualImport()));
-//        logger.trace("itemSign.isEmpty() && storageSign.getAmount() > itemMainHand.getAmount()\n"
-//            + "            && config.getBoolean(\"manual-export\")" + (itemSign.isEmpty() && storageSign.getAmount() > itemMainHand.getAmount()
-//            && ConfigLoader.getManualExport()));
-
-//        if (ConfigLoader.getManualImport()) return ;
-
-//        if (clickBlockSSData.isSimilar(itemMainHandSSData)) {
-//          logger.debug("Sign store Items.");
-//          storageSign.addAmount(itemSign.getAmount() * itemSign.getStackSize());
-//          itemSign.setAmount(0);
-//          player.getInventory().setItemInMainHand(itemSign.getStorageSign());
-//          itemMainHandSS.setStorageSignData(itemMainHand);
-
-//        } else if (itemSign.isEmpty() && storageSign.getMaterial() == itemSign.getSmat()
-
-//        } else if (itemMainHandSSData.isEmpty() && StorageSignV2.isStorageSign(itemMainHand)) {
-          //空看板収納
-        /*  logger.debug("Empty Sign store.");
-          logger.trace("player.isSneaking()" + player.isSneaking());
-
-          if(! targetStorageSign.importItemStack(itemMainHand))return;
-
-          player.getInventory().clear(player.getInventory().getHeldItemSlot());
-
-          if (! player.isSneaking()){
-            for (int i = 0; i < player.getInventory().getSize(); i++){
-              ItemStack item = player.getInventory().getItem(i);
-              if (StorageSignV2.isStorageSign())
-            }
-          }*/
-//					if (player.isSneaking()) {
-//            logger.debug("Player is Sneaking.");
-//						storageSign.addAmount(itemMainHand.getAmount());
-//						player.getInventory().clear(player.getInventory().getHeldItemSlot());
-//					} else {
-//            logger.debug("store all Empty Sign.SearchPlayer Inventory.");
-//            // アイテム内でサインを探す
-//						for (int i = 0; i < player.getInventory().getSize(); i++) {
-//							ItemStack item = player.getInventory().getItem(i);
-//              boolean isSimilar = storageSign.isSimilar(item);
-//              logger.trace("storageSign.isSimilar(item)" + isSimilar);
-//							if (isSimilar) {
-//                logger.debug("find Empty Sign.");
-//                storageSign.addAmount(item.getAmount());
-//                player.getInventory().clear(i);
-//							}
-//						}
-//					}
-//        } else if (itemSign.isEmpty() && storageSign.getAmount() > itemMainHand.getAmount()
-//            && ConfigLoader.getManualExport()) {
-
-          //} else if (targetStorageSign.isEmpty() && storageSign.getAmount() > itemMainHand.getAmount()) {
-          //中身分割機能
-/*          logger.debug("Export Item to Empty Sign.");
-          targetStorageSign.isStorageItemEquals(itemMainHandSS.getStorageItem()).setMaterial(storageSign.getMaterial());
-          itemSign.setDamage(storageSign.getDamage());
-          //itemSign.setEnchant(storageSign.getEnchant());
-          //itemSign.setInfo(StorageSign.getInfo());
-          //itemSign.setPotion(storageSign.getPotion());
-
-          int limit;
-          if (player.isSneaking()){
-            limit = ConfigLoader.getSneakDivideLimit();
-          } else {
-            limit = ConfigLoader.getDivideLimit();
-          }
-
-          logger.trace("limit > 0 && storageSign.getAmount() > limit * (itemSign.getStackSize() + 1)" + (limit > 0 && storageSign.getAmount() > limit * (itemSign.getStackSize() + 1)));
-					if (limit > 0 && storageSign.getAmount() > limit * (itemSign.getStackSize() + 1)) {
-            logger.debug("Item Export EmptySign divide-limit.");
-						itemSign.setAmount(limit);
-					} else {
-            logger.debug("Item Export EmptySign Equality divide.");
-						itemSign.setAmount(storageSign.getAmount() / (itemSign.getStackSize() + 1));
-					}
-          player.getInventory().setItemInMainHand(itemSign.getStorageSign());
-          //余りは看板に引き受けてもらう
-          storageSign.setAmount(storageSign.getAmount() - (itemSign.getStackSize()
-              * itemSign.getAmount()));*/
-//        }
-/*        logger.debug("Update StorageSign.");
-				for (int i = 0; i < 4; i++) {
-          logger.trace("set Line i:" + i + ". Text: " + storageSign.getSigntext(i));
-					sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
-				}
-        sign.update();*/
-//        logger.debug("★Item move to User StorageSign: End");
-//        return;
-//      }
-
-      //ここから搬入
-//      boolean isMainSimilar = storageSign.isSimilar(itemMainHand);
-//      logger.debug("check manual Import.");
-//      logger.trace("storageSign.isSimilar(itemMainHand): " + isMainSimilar);
-//      logger.trace("config.getBoolean(\"manual-import\"): " + ConfigLoader.getManualImport());
-//      logger.trace("config.getBoolean(\"manual-export\"): " + ConfigLoader.getManualExport());
-
-
-//      else if (StorageSignV2.isStorageSign(itemMainHand)) {
-//        logger.debug("StorageSign Import.");
-
-//        logger.trace("!config.getBoolean(\"manual-import\"): " + !ConfigLoader.getManualImport());
-//        if (!ConfigLoader.getManualImport()) {
-//          logger.debug("★option:manual-import is False!");
-//          return;
-//        }
-//        logger.trace("player.isSneaking():" + player.isSneaking());
-
-//        clickBlockSSData.importContentItem(itemMainHand);
-
-/*				if (player.isSneaking()) {
-          logger.debug("player is Sneaking.Push 1 Item.");
-          targetStorageSign.importItemStack(itemMainHand);
-//					storageSign.addAmount(itemMainHand.getAmount());
-					player.getInventory().clear(player.getInventory().getHeldItemSlot());
-
-          logger.trace("isDye(itemMainHand):" + isDye(itemMainHand));
-          logger.trace("isSac(itemMainHand):" + isSac(itemMainHand));
-					if (isDye(itemMainHand)) {
-            logger.debug("mainHandItem is Dye.");
-						sign.getSide(Side.FRONT).setColor(getDyeColor(itemMainHand)); //同色用
-					}
-					if (isSac(itemMainHand)) {
-            logger.debug("mainHandItem is Sac.");
-						sign.getSide(Side.FRONT).setGlowingText(isGlowSac(itemMainHand)); //イカスミ用
-					}
-				} else {
-          logger.debug("push Stack Item.");
-
-					for (int i = 0; i < player.getInventory().getSize(); i++) {
-						ItemStack item = player.getInventory().getItem(i);
-            boolean itemSimilar = storageSign.isSimilar(item);
-            logger.trace(" item: " + item);
-            logger.trace(" storageSign.isSimilar(item): " + itemSimilar);
-						if (itemSimilar) {
-              logger.debug(" same Item Found.Push Item to StorageSign.");
-							storageSign.addAmount(item.getAmount());
-							player.getInventory().clear(i);
-						}
-					}
-          logger.debug("push Stack Item.End.");
-				}*/
-
-//        player.updateInventory();
-//      } else if (ConfigLoader.getManualExport()) {
-//        //放出
-//        logger.debug("Export StorageSign Item.");
-//
-//        boolean isDye = false;
-//        boolean isSac = false;
-//        if (itemMainHand != null){
-//          isDye = isDye(itemMainHand);
-//          isSac = isSac(itemMainHand);
-//        }
-//        logger.trace("itemMainHand:" + itemMainHand);
-//        logger.trace("isDye:" + isDye);
-//        logger.trace("isSac:" + isSac);
-//        //染料の場合、放出せずに看板に色がつく
-//        if (isDye) {
-//          logger.debug("★Set SignColor.");
-//          event.setUseItemInHand(Event.Result.ALLOW);
-//          //最初にDENYにしてたので戻す、同色染料が使えない。
-//          event.setUseInteractedBlock(Event.Result.ALLOW);
-//          return;
-//        } else if (isSac) {
-//          logger.debug("★Set Sac.");
-//          event.setUseItemInHand(Event.Result.ALLOW);
-//          event.setUseInteractedBlock(Event.Result.ALLOW);
-//          return;
-//        } else if (clickBlockSSData.isEmpty()) {
-//          logger.debug("★StorageSign is Empty.");
-//          return;
 //        }
 
-//        ItemStack item = storageSign.getContents();
-//        int max = item.getMaxStackSize();
-
-//        logger.trace("player.isSneaking(): " + player.isSneaking());
-
-//        ItemStack item = clickBlockSSData.outputContentItem(player.isSneaking());
-
-//        logger.trace("storageSign.getAmount() > max: " + (storageSign.getAmount() > max));
-/*				if (player.isSneaking()) {
-          logger.debug("Player is Sneaking.Get 1 Item.");
-					storageSign.addAmount(-1);
-				} else if (storageSign.getAmount() > max) {
-          logger.debug("Sign Items bigger than 1Stack.Get 1Stack Items.");
-					item.setAmount(max);
-					storageSign.addAmount(-max);
-				} else {
-          logger.debug("Get 1Stack Items.");
-					item.setAmount(storageSign.getAmount());
-					storageSign.setAmount(0);
-				}*/
-
-//        logger.debug("drop Item.");
-//        Location loc = player.getLocation();
-//        loc.setY(loc.getY() + 0.5);
-//        player.getWorld().dropItem(loc, item);
-//      }
-
-//      logger.debug("SetSignText.");
-      /*
-			for (int i = 0; i < 4; i++) {
-        logger.trace(" set Line i:" + i + ". Text: " + storageSign.getSigntext(i));
-				sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
-			}*/
-//      clickBlockSSData.setStorageData(clickBlock);
-
-//      logger.debug("update Sign.");
-      //sign.update();
-//    }
-
-//    logger.debug("★onPlayerInteract: End");
   }
 
   private boolean isDye(ItemStack item) {

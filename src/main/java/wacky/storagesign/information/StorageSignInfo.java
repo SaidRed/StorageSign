@@ -11,6 +11,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * StorageSign に保管されている StorageSign 情報
+ * なので Empty StorageSign の情報を保管する
+ */
 public class StorageSignInfo extends NormalInformation implements SSInformation{
 
   /**
@@ -42,13 +46,12 @@ public class StorageSignInfo extends NormalInformation implements SSInformation{
    */
   private static Material checkMaterial(String itemData){
     String materialName = Arrays.stream(
-                    itemData.replace(StorageSignConfig.STORAGE_SIGN_NAME,"Sign")
+                    itemData.replace(StorageSignConfig.defaultData.STORAGE_SIGN_NAME,"Sign")
                             .split("(?<=[a-z])(?=[A-Z])"))
             .map(String::toUpperCase)
             .collect(Collectors.joining("_"));
     return Material.getMaterial(materialName);
   }
-
 
   /**
    * MaterialName から StorageSign に収納されている場合の StorageSign 表記名
@@ -60,7 +63,17 @@ public class StorageSignInfo extends NormalInformation implements SSInformation{
             .filter(S ->! S.equals("SIGN"))
             .map(String::toLowerCase)
             .map(StringUtils::capitalize)
-            .collect(Collectors.joining()) + StorageSignConfig.STORAGE_SIGN_NAME;
+            .collect(Collectors.joining()) + StorageSignConfig.defaultData.STORAGE_SIGN_NAME;
+  }
+
+  /**
+   * ブロックStorageSign に表記される文字列
+   * [アイテムショートネーム]
+   * @return 貯蔵アイテム情報 (SignBlock)
+   */
+  @Override
+  public String getSSStorageItemData() {
+    return StorageSignItemName(content);
   }
 
   /**
@@ -70,12 +83,13 @@ public class StorageSignInfo extends NormalInformation implements SSInformation{
    */
   @Override
   public String getSSLoreItemData() {
+//    return StorageSignConfig.empty;
     return StorageSignItemName(content);
   }
 
   /**
    * StorageSign として出庫する貯蔵アイテム ItemStack
-   * Empty の ***StorageSign を出庫する
+   * Empty の StorageSign を出庫する
    * @return Storage ItemStack
    */
   @Override
@@ -84,8 +98,8 @@ public class StorageSignInfo extends NormalInformation implements SSInformation{
     ItemStack item = new ItemStack(content);
 
     ItemMeta meta = item.getItemMeta();
-    meta.setDisplayName(StorageSignConfig.STORAGE_SIGN_NAME);
-    meta.setLore(List.of(StorageSignItemName(content)));
+    meta.setDisplayName(StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
+    meta.setLore(List.of(StorageSignConfig.defaultData.empty));
     item.setItemMeta(meta);
     return item;
   }
@@ -98,9 +112,11 @@ public class StorageSignInfo extends NormalInformation implements SSInformation{
    */
   @Override
   public boolean isSimilar(ItemStack itemStack) {
+    if(! content.equals(itemStack.getType()))return false;
     ItemMeta meta = itemStack.getItemMeta();
+    if(! meta.getDisplayName().equals(StorageSignConfig.defaultData.STORAGE_SIGN_NAME))return false;
     String itemData = meta.getLore().getFirst();
-    return itemData.startsWith(getSSLoreItemData());
+    return itemData.equals(StorageSignConfig.defaultData.empty);
   }
 
 }

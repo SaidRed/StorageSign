@@ -43,11 +43,11 @@ public class FireworkRocket extends CordInformation<FireworkMeta> implements SSI
    * ItemMeta に コード値 を設定
    * [コード値] 部分を参照して ItemMeta に情報を追加する
    * <p>[アイテムショートネーム]:[コード値]</p>
-   * @param meta セットしたい ItemMeta
    * @return Cord値 をセットし終わった itemMeta
    */
   @Override
-  protected ItemMeta setCord(FireworkMeta meta) {
+  protected ItemMeta setCord(){
+    FireworkMeta meta = getContentItemMeta();
     meta.setPower(cord);
     return meta;
   }

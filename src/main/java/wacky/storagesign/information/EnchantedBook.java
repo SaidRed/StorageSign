@@ -22,8 +22,11 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
   private static final String SS_ITEM_NAME = "ENCHBOOK";
 
   public EnchantedBook(String itemData, Logger logger){
-    this(getEnchantment(itemData.split(":")[1]),
-            Integer.parseInt(itemData.split("[: ]")[2]), logger);
+    this(itemData.split("[: ]"), logger);
+  }
+
+  private EnchantedBook(String[] itemData, Logger logger){
+    this(getEnchantment(itemData[1]), Integer.parseInt(itemData[2]), logger);
   }
 
   public EnchantedBook(ItemStack itemStack, Logger logger){
@@ -43,7 +46,7 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
   private static Enchantment getEnchantment(String enchantName) {
     //後ろ切れても可.
     return org.bukkit.Bukkit.getRegistry(Enchantment.class).stream()
-            .filter(E->E.getKey().getKey().startsWith(enchantName))
+            .filter(E -> E.getKey().getKey().startsWith(enchantName))
             .findFirst()
             .orElse(null);
   }
@@ -128,11 +131,11 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
    * ItemMeta に コード値 を設定
    * [コード値] 部分を参照して ItemMeta に情報を追加する
    * <p>[アイテムショートネーム]:[コード値]</p>
-   * @param meta セットしたい ItemMeta
    * @return Cord値 をセットし終わった itemMeta
    */
   @Override
-  protected ItemMeta setCord(EnchantmentStorageMeta meta) {
+  protected ItemMeta setCord() {
+    EnchantmentStorageMeta meta = getContentItemMeta();
     meta.addStoredEnchant(type, cord,true);
     return meta;
   }

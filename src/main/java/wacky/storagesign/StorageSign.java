@@ -584,7 +584,7 @@ public class StorageSign {
   }
 
   /**
-   * StrageSignの内容を取得します.
+   * StorageSignの内容を取得します.
    *
    * @return ItemStack
    */
@@ -874,41 +874,6 @@ public class StorageSign {
   }
 
   /**
-   * フィールド変数：enchのgetter.
-   */
-/*  public EnchantBook getEnchant() {
-    logger.debug("getEnchant");
-    return this.enchantBook;
-  }*/
-
-  /**
-   * フィールド変数：enchのsetter.
-   */
-  /*public void setEnchant(Enchantment ench) {
-    logger.debug("setEnchant");
-    this.ench = ench;
-  }*/
-/*  public void setEnchant(EnchantBook ench) {
-    this.enchantBook = ench;
-  }*/
-
-  /**
-   * フィールド変数：potのgetter.
-   */
-/*  public Potion getPotion() {
-    logger.debug("getPotion");
-    return this.potion;
-  }*/
-
-  /**
-   * フィールド変数：potのsetter.
-   */
-/*  public void setPotion(Potion pot) {
-    logger.debug("setPotion");
-    this.potion = pot;
-  }*/
-
-  /**
    * フィールド変数：smatのgetter.
    */
   public Material getSmat() {
@@ -980,12 +945,5 @@ public class StorageSign {
     logger.debug(" This Block isn't StorageSign.");
     return false;
   }
-
-
-
-////////////////////////////////////////////////////////////////////////
-/*  public void testGetMat(){
-    if(this.info != null) this.mat = this.info.getContent();
-  }*/
 
 }

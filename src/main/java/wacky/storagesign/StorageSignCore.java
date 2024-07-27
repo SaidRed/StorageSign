@@ -3,7 +3,6 @@ package wacky.storagesign;
 import com.github.teruteru128.logger.Logger;
 
 import java.util.*;
-import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -19,11 +18,9 @@ import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
@@ -33,9 +30,7 @@ import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSignOpenEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -56,11 +51,6 @@ public class StorageSignCore extends JavaPlugin implements Listener {
   public void onEnable() {
     // ConfigLoader初期化
     ConfigLoader.setup(this);
-
-    getCommand("test").setExecutor(new testCommand());
-    getCommand("test2").setExecutor(new testCommand());
-    getCommand("CustomModelDataSetTest").setExecutor(new testCommand());
-    getCommand("CustomModelDataGetTest").setExecutor(new testCommand());
 
     // ロガーの初期設定
     String logLevel = ConfigLoader.getLogLevel();
@@ -97,7 +87,7 @@ public class StorageSignCore extends JavaPlugin implements Listener {
     }
 
     logger.trace("setEvent");
-//    getServer().getPluginManager().registerEvents(this, this);
+    getServer().getPluginManager().registerEvents(this, this);
     getServer().getPluginManager().registerEvents(new StorageSignPlayerEvent(this), this);
 
     logger.trace("no-bud:" + ConfigLoader.getNoBud());
