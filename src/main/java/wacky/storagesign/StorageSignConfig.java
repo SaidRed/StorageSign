@@ -22,11 +22,15 @@ public class StorageSignConfig {
      * アイテム無しの表記
      */
     public static final String empty = "Empty";
+    public static final String ominousBanner = "OMINOUS_BANNER";
 
     private static final Map<String, Material> ORIGINAL_ITEM_NAME = Map.ofEntries(
             entry("ENCHBOOK",ENCHANTED_BOOK),
             entry("SPOTION",SPLASH_POTION),
             entry("LPOTION",LINGERING_POTION),
+            entry("TARROW",TIPPED_ARROW),
+            // 襲撃バーナー
+            entry(ominousBanner,WHITE_BANNER),
             // SS オリジナル名 Empty表記
             entry(empty,AIR)
     );
@@ -75,8 +79,10 @@ public class StorageSignConfig {
             entry(SPLASH_POTION, Potion.class),
             entry(LINGERING_POTION, Potion.class),
             entry(POTION, Potion.class),
+            entry(TIPPED_ARROW, Potion.class),
             entry(OMINOUS_BOTTLE, OminousBottle.class),
-            entry(FIREWORK_ROCKET, FireworkRocket.class)
+            entry(FIREWORK_ROCKET, FireworkRocket.class),
+            entry(WHITE_BANNER, OminousBanner.class)
     );
     public static boolean containsKey(Material material){
       return informationList.containsKey(material);

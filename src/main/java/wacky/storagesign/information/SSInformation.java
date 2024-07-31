@@ -1,7 +1,6 @@
 package wacky.storagesign.information;
 
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 public interface SSInformation {
 

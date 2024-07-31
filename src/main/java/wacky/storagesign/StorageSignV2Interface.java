@@ -5,11 +5,11 @@ import org.bukkit.inventory.ItemStack;
 public interface StorageSignV2Interface {
 
   /**
-   * アイテムStorageSign の ItemStack
-   *
-   * @return StorageSign ItemStack
+   * ItemStack に アイテムStorageSign情報を書き込む
+   * @param itemStack 情報を書き込むItemStack
+   * @return StorageSign になった ItemStack
    */
-  ItemStack getStorageSign();
+  ItemStack getStorageSign(ItemStack itemStack);
 
   /**
    * 在庫しているアイテム の 出庫

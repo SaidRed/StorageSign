@@ -2,11 +2,12 @@ package wacky.storagesign;
 
 import com.github.teruteru128.logger.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
 import org.bukkit.inventory.ItemStack;
@@ -94,8 +95,8 @@ public class StorageSignV2 implements StorageSignV2Interface {
    * @return Front の SignSide
    */
   protected static SignSide getSignSideFront(BlockState state){
-    Sign sign = (Sign) state;
-    return sign.getSide(Side.FRONT);
+    if(state instanceof Sign sign) return sign.getSide(Side.FRONT);
+    return null;
   }
 
   /**
@@ -182,17 +183,27 @@ public class StorageSignV2 implements StorageSignV2Interface {
     return false;
   }
 
+  public static boolean isFloorSign(Material material) {
+    return material.data.isAssignableFrom(org.bukkit.block.data.type.Sign.class);
+  }
+
+  public static boolean isWallSign(Material material){
+    return material.data.isAssignableFrom(WallSign.class);
+  }
+
   /**
-   * ブロックStorageSign から アイテムStorageSign への変換
-   *
-   * @return StorageSign ItemStack
+   * ItemStack に アイテムStorageSign情報を書き込む
+   * @param itemStack 情報を書き込むItemStack
+   * @return StorageSign になった ItemStack
    */
-  public ItemStack getStorageSign(){
-    ItemStack itemStack = new ItemStack(materialSign);
+  public ItemStack getStorageSign(ItemStack itemStack){
+//    ItemStack itemStack = new ItemStack(materialSign);
     ItemMeta meta = itemStack.getItemMeta();
     Objects.requireNonNull(meta).setDisplayName(StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
     if(isContentEmpty())clear();
-    meta.setLore(List.of(info.getSSLoreItemData() + (materialContent.equals(Material.AIR) ? "" : " " + amount)));
+    meta.setLore(List.of(info.getSSLoreItemData() + (
+            info.getSSLoreItemData().equals(StorageSignConfig.defaultData.empty) ? "" : " " + amount)
+    ));
     meta.setMaxStackSize(ConfigLoader.getMaxStackSize());
     itemStack.setItemMeta(meta);
     return itemStack;
@@ -462,4 +473,14 @@ public class StorageSignV2 implements StorageSignV2Interface {
     empty = true;
     info = new NormalInformation(materialContent, logger);
   }
+
+  /**
+   * 設置時に見づらい看板の色を変換するように取得できるようにしておく
+   * @return StorageSign の木材情報返す
+   */
+  public Material getMaterialSign(){return materialSign;}
+
+  public int getAmount(){return amount;}
+
+  public void addAmount(int addAmount){amount +=addAmount;}
 }

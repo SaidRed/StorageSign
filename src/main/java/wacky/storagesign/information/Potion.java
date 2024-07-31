@@ -101,7 +101,7 @@ public class Potion extends TypeInformation<PotionType, PotionMeta> implements S
    * @return Material
    */
   public static Material getPotionCategory(String itemData){
-    if(itemData.length() == 6) return Material.POTION;
+    if(itemData.equals("POTION")) return Material.POTION;
     return StorageSignConfig.defaultData.getOriginalItemName(itemData);
   }
 

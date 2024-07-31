@@ -1,11 +1,8 @@
-package wacky.storagesign;
+package wacky.storagesign.event;
 
 import com.github.teruteru128.logger.Logger;
 
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -16,8 +13,12 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import wacky.storagesign.ConfigLoader;
+import wacky.storagesign.StorageSignCore;
+import wacky.storagesign.StorageSignV2;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -108,7 +109,8 @@ public class StorageSignPlayerEvent implements Listener {
             // 手持ちStorageSign を StorageSign に登録
             clickBlockSSData.entryContent(itemMainHand);
 
-          } else if (clickBlockSSData.isSimilar(itemMainHand)) {
+          } else if (clickBlockSSData.isSimilar(itemMainHand) &&
+                  ConfigLoader.getManualImport()) {
             // Block SS Content == Item SS Contents
             // 手持ちStorageSign の中身を StorageSign に入庫
             if(player.isSneaking()) {
@@ -124,14 +126,14 @@ public class StorageSignPlayerEvent implements Listener {
               }
             }
 
-          } else {
+          } else if(ConfigLoader.getManualExport()){
             // Block SS In Item -> Item SS Empty
             // 手持ちStorageSign に StorageSign Contents を分割
             clickBlockSSData.SSExchangeExport(itemMainHand, player.isSneaking());
 
           }
 
-        }else{
+        }else if(ConfigLoader.getManualImport()){
           // Block SS In Item is StorageSign <- import SS ItemStack
           // 手持ちSS の SS内入庫
           if(clickBlockSSData.SSExchangeExport(itemMainHandSSData,itemMainHand)){
@@ -143,7 +145,7 @@ public class StorageSignPlayerEvent implements Listener {
 
       }else{
         // 手持ちが StorageSign ではない
-        if(clickBlockSSData.empty){
+        if(clickBlockSSData.isEmpty()){
           if(itemMainHand == null) {
             logger.debug("★User MainHand is Null.");
             //何もしない
@@ -154,8 +156,16 @@ public class StorageSignPlayerEvent implements Listener {
           logger.debug("main hand has " + itemMainHand.getType());
           clickBlockSSData.entryContent(itemMainHand);
 
-        } else if(clickBlockSSData.isContentItemEquals(itemMainHand)) {
+        } else if(clickBlockSSData.isContentItemEquals(itemMainHand) &&
+                ConfigLoader.getManualImport()) {
           //入庫
+          boolean isDye = itemMainHand != null && isDye(itemMainHand);
+          boolean isSac = itemMainHand != null && isSac(itemMainHand);
+
+          logger.trace("itemMainHand:" + itemMainHand);
+          logger.trace("isDye:" + isDye);
+          logger.trace("isSac:" + isSac);
+
           logger.debug("StorageSign Content import.");
           if(player.isSneaking()) {
             if (clickBlockSSData.importContentItem(itemMainHand)) {
@@ -175,29 +185,9 @@ public class StorageSignPlayerEvent implements Listener {
               }
             }
           }
-        } else {
+        } else if(ConfigLoader.getManualImport()){
           //出庫
           logger.debug("Export StorageSign Item.");
-
-          boolean isDye = itemMainHand != null && isDye(itemMainHand);
-          boolean isSac = itemMainHand != null && isSac(itemMainHand);
-
-          logger.trace("itemMainHand:" + itemMainHand);
-          logger.trace("isDye:" + isDye);
-          logger.trace("isSac:" + isSac);
-          //染料の場合、放出せずに看板に色がつく
-          if (isDye) {
-            logger.debug("★Set SignColor.");
-            event.setUseItemInHand(Event.Result.ALLOW);
-            //最初にDENYにしてたので戻す、同色染料が使えない。
-            event.setUseInteractedBlock(Event.Result.ALLOW);
-            return;
-          } else if (isSac) {
-            logger.debug("★Set Sac.");
-            event.setUseItemInHand(Event.Result.ALLOW);
-            event.setUseInteractedBlock(Event.Result.ALLOW);
-            return;
-          }
 
           logger.trace("player.isSneaking(): " + player.isSneaking());
           if(! clickBlockSSData.isContentEmpty()) {
@@ -217,42 +207,70 @@ public class StorageSignPlayerEvent implements Listener {
       player.updateInventory();
 
     }
-
-//        } else if (mat == Material.WHITE_BANNER) {
-//          logger.debug("main hand has WhiteBanner.");
-//          storageSign.setMaterial(mat);
-//          BannerMeta bannerMeta = (BannerMeta) itemMainHand.getItemMeta();
-//          if (bannerMeta.getPatterns().size() == 8) {
-//            ominousBannerMeta = bannerMeta;//襲撃バナー登録
-//            storageSign.setDamage((short) 8);
-//          }
-//        }
-
   }
+
+  /*
+  //染料の場合、放出せずに看板に色がつく
+            if(!player.getGameMode().equals(GameMode.ADVENTURE)){
+              if (isDye || isSac){
+                logger.debug("★Set SignColor.");
+                event.setUseItemInHand(Event.Result.ALLOW);
+                //最初にDENYにしてたので戻す、同色染料が使えない。
+                event.setUseInteractedBlock(Event.Result.ALLOW);
+
+                SignSide side = ((Sign)clickBlock.getState()).getSide(Side.FRONT);
+                if (isDye) {
+                  logger.debug("mainHandItem is Dye.");
+                  side.setColor(getDyeColor(itemMainHand)); //同色用
+                  return;
+                }
+                if (isSac(itemMainHand)) {
+                  logger.debug("mainHandItem is Sac.");
+                  side.setGlowingText(isGlowSac(itemMainHand)); //イカスミ用
+                  return;
+                }
+              }
+            } else
+   */
+
+  private final Map<Material,DyeColor> DayColor = Map.ofEntries(
+          Map.entry(Material.WHITE_DYE, org.bukkit.DyeColor.WHITE),
+          Map.entry(Material.ORANGE_DYE, org.bukkit.DyeColor.ORANGE),
+          Map.entry(Material.MAGENTA_DYE, org.bukkit.DyeColor.MAGENTA),
+          Map.entry(Material.LIGHT_BLUE_DYE, org.bukkit.DyeColor.LIGHT_BLUE),
+          Map.entry(Material.YELLOW_DYE, org.bukkit.DyeColor.YELLOW),
+          Map.entry(Material.LIME_DYE, org.bukkit.DyeColor.LIME),
+          Map.entry(Material.PINK_DYE, org.bukkit.DyeColor.PINK),
+          Map.entry(Material.GRAY_DYE, org.bukkit.DyeColor.GRAY),
+          Map.entry(Material.LIGHT_GRAY_DYE, org.bukkit.DyeColor.LIGHT_GRAY),
+          Map.entry(Material.CYAN_DYE, org.bukkit.DyeColor.CYAN),
+          Map.entry(Material.PURPLE_DYE, org.bukkit.DyeColor.PURPLE),
+          Map.entry(Material.BLUE_DYE, org.bukkit.DyeColor.BLUE),
+          Map.entry(Material.BROWN_DYE, org.bukkit.DyeColor.BROWN),
+          Map.entry(Material.GREEN_DYE, org.bukkit.DyeColor.GREEN),
+          Map.entry(Material.RED_DYE, org.bukkit.DyeColor.RED),
+          Map.entry(Material.BLACK_DYE, org.bukkit.DyeColor.BLACK)
+  );
 
   private boolean isDye(ItemStack item) {
-    logger.debug(" isDye: Start");
-    Material mat = item.getType();
-
-    logger.trace(" mat: " + mat);
-    return switch (mat) {
-      case WHITE_DYE, ORANGE_DYE, MAGENTA_DYE, LIGHT_BLUE_DYE, YELLOW_DYE,
-           LIME_DYE, PINK_DYE, GRAY_DYE, LIGHT_GRAY_DYE, CYAN_DYE,
-           PURPLE_DYE, BLUE_DYE, BROWN_DYE, GREEN_DYE, RED_DYE,
-           BLACK_DYE -> true;
-      default -> false;
-    };
+    return DayColor.containsKey(item.getType());
   }
 
-  private boolean isSac(ItemStack item) {
-    logger.debug(" isSac: Start");
-    Material mat = item.getType();
+  private DyeColor getDyeColor(ItemStack item) {
+    return DayColor.get(item.getType());
+  }
 
-    logger.trace(" mat: " + mat);
-    return switch (mat) {
-      case INK_SAC, GLOW_INK_SAC -> true;
-      default -> false;
-    };
+  private final Map<Material,Boolean> InkSac = Map.ofEntries(
+          Map.entry(Material.INK_SAC, false),
+          Map.entry(Material.GLOW_INK_SAC, true)
+  );
+
+  private boolean isSac(ItemStack item) {
+    return InkSac.containsKey(item.getType());
+  }
+
+  private boolean isGlowSac(ItemStack item) {
+    return InkSac.get(item.getType());
   }
 
 }

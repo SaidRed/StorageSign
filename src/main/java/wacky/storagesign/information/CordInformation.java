@@ -6,8 +6,6 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.Objects;
-
 public abstract class CordInformation<M extends ItemMeta> extends NormalInformation implements SSInformation{
   protected final int cord;
   /**

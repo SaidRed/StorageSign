@@ -3,6 +3,8 @@ package wacky.storagesign.information;
 import com.github.teruteru128.logger.Logger;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import wacky.storagesign.StorageSignConfig;
 
 /**
  * SSと情報をやり取りするシステム
@@ -38,7 +40,8 @@ public class NormalInformation implements SSInformation {
    */
   @Override
   public String getSSStorageItemData() {
-    return getSSLoreItemData();
+    return (content == null || content.equals(Material.AIR) )?
+            "": content.toString();
   }
 
   /**
@@ -48,7 +51,7 @@ public class NormalInformation implements SSInformation {
    */
   @Override
   public String getSSLoreItemData() {
-    return content.toString();
+    return getSSStorageItemData().isEmpty()? StorageSignConfig.defaultData.empty: getSSStorageItemData() ;
   }
 
   /**
@@ -68,9 +71,9 @@ public class NormalInformation implements SSInformation {
    */
   @Override
   public boolean isSimilar(ItemStack itemStack) {
-//    return itemStack.isSimilar(getStorageItemStack());
-    ItemStack i = getStorageItemStack();
-    return itemStack.isSimilar(i);
+    ItemMeta itemMeta = itemStack.getItemMeta();
+    String test = itemMeta.getAsComponentString();
+    return itemStack.isSimilar(getStorageItemStack());
   }
 
   /**

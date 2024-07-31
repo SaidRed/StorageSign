@@ -1,18 +1,20 @@
 package wacky.storagesign.information;
 
-import com.github.teruteru128.logger.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import wacky.storagesign.ConfigLoader;
 import wacky.storagesign.StorageSignConfig;
+import com.github.teruteru128.logger.Logger;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * StorageSign に保管されている StorageSign 情報
+ * StorageSign に入庫されている StorageSign 情報
  * なので Empty StorageSign の情報を保管する
  */
 public class StorageSignInfo extends NormalInformation implements SSInformation{
@@ -67,23 +69,12 @@ public class StorageSignInfo extends NormalInformation implements SSInformation{
   }
 
   /**
-   * ブロックStorageSign に表記される文字列
-   * [アイテムショートネーム]
-   * @return 貯蔵アイテム情報 (SignBlock)
-   */
-  @Override
-  public String getSSStorageItemData() {
-    return StorageSignItemName(content);
-  }
-
-  /**
    * アイテムStorageSign の Lora に書き込む情報を作成
    * [アイテムフルネーム] [アイテム数 amount]
    * @return 貯蔵アイテム情報 (Lora)
    */
   @Override
-  public String getSSLoreItemData() {
-//    return StorageSignConfig.empty;
+  public String getSSStorageItemData() {
     return StorageSignItemName(content);
   }
 
@@ -100,6 +91,8 @@ public class StorageSignInfo extends NormalInformation implements SSInformation{
     ItemMeta meta = item.getItemMeta();
     meta.setDisplayName(StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
     meta.setLore(List.of(StorageSignConfig.defaultData.empty));
+    // コンフィグ設定 MaxStackSize
+    if(ConfigLoader.getMaxStackSize() != 0)meta.setMaxStackSize(ConfigLoader.getMaxStackSize());
     item.setItemMeta(meta);
     return item;
   }
@@ -107,6 +100,7 @@ public class StorageSignInfo extends NormalInformation implements SSInformation{
   /**
    * アイテムスタックを使ってのアイテム比較
    * Lore 名で比較して同一か判定
+   * 保管できる StorageSign が Empty のみなので Lora の比較は Empty のみ対象
    * @param itemStack 比較するアイテムスタック
    * @return true 同一と認める/false 同一と認めない
    */
