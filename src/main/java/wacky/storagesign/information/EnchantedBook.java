@@ -6,20 +6,16 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import wacky.storagesign.StorageSignConfig;
 
-import java.util.List;
-
+/**
+ * エンチャントブックの表記ルール
+ * [エンチャントブック ショートネーム]:[エンチャント効果]:[エンチャントレベル] [ストレージ数]
+ * ENCHBOOK : EnchantType : EnchantLevel
+ */
 public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStorageMeta> implements SSInformation{
 
-  /**
-   * 5文字でタイプ名が同じになるので6文字にするプレフィックス一覧
-   */
-  private static final List<String> exPrefix = List.of(
-          "fire_"
-  );
-
   private static final Material material = Material.ENCHANTED_BOOK;
-  private static final String SS_ITEM_NAME = "ENCHBOOK";
 
   public EnchantedBook(String itemData, Logger logger){
     this(itemData.split("[: ]"), logger);
@@ -45,10 +41,11 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
    */
   private static Enchantment getEnchantment(String enchantName) {
     //後ろ切れても可.
-    return org.bukkit.Bukkit.getRegistry(Enchantment.class).stream()
+    return StorageSignConfig.enchantedBook.getEnchantment(enchantName);
+/*    return org.bukkit.Bukkit.getRegistry(Enchantment.class).stream()
             .filter(E -> E.getKey().getKey().startsWith(enchantName))
             .findFirst()
-            .orElse(null);
+            .orElse(null);*/
   }
 
   /**
@@ -90,7 +87,7 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
    */
   @Override
   protected String getStorageItemShortName() {
-    return SS_ITEM_NAME;
+    return StorageSignConfig.enchantedBook.SS_ITEM_NAME;
   }
 
   /**
@@ -110,9 +107,7 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
    */
   @Override
   protected String getTypeShortName() {
-    String type = getTypeName();
-    int len = exPrefix.stream().anyMatch(type::startsWith) ? 6 : 5;
-    return type.length() > len ? type.substring(0,len) : type;
+    return StorageSignConfig.enchantedBook.getEnchantShortName(type);
   }
 
   /**

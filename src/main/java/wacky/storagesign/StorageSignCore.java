@@ -27,11 +27,9 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.BannerMeta;
+import org.bukkit.inventory.recipe.CraftingBookCategory;
 import org.bukkit.plugin.java.JavaPlugin;
-import wacky.storagesign.event.StorageSignBlockPlaceBreak;
-import wacky.storagesign.event.StorageSignItemMoveEvent;
-import wacky.storagesign.event.StorageSignPickupItemEvent;
-import wacky.storagesign.event.StorageSignPlayerEvent;
+import wacky.storagesign.event.*;
 import wacky.storagesign.signdefinition.SignDefinition;
 
 public class StorageSignCore extends JavaPlugin implements Listener {
@@ -62,20 +60,26 @@ public class StorageSignCore extends JavaPlugin implements Listener {
 
     //鯖別レシピが実装されたら
     logger.trace("hardrecipe:" + ConfigLoader.getHardRecipe());
-    Iterator<Material> it = SignDefinition.sign_materials.iterator();
-    while(it.hasNext()){
-      Material mat = it.next();
+//    Iterator<Material> it = SignDefinition.sign_materials.iterator();
+
+//    while(it.hasNext()){
+//      Material mat = it.next();
+    for(Material mat : SignDefinition.signs){
       logger.trace("signRecipi name:" + mat);
 
       ShapedRecipe storageSignRecipe = new ShapedRecipe(
-              new NamespacedKey(this, "ssr" + mat.toString()), StorageSign.emptySign(mat)
+              new NamespacedKey(this, "ssr" + mat.toString()), StorageSignV2.emptyStorageSign(mat,logger)
       );
-      //ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign());
+      //ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSignV2.emptyStorageSign(mat,logger));
       storageSignRecipe.shape("CCC", "CSC", "CHC");
       storageSignRecipe.setIngredient('C', Material.CHEST);
       storageSignRecipe.setIngredient('S', mat);
 
       storageSignRecipe.setIngredient('H', ConfigLoader.getHardRecipe() ? Material.ENDER_CHEST : Material.CHEST);
+
+      storageSignRecipe.setCategory(CraftingBookCategory.BUILDING);
+      storageSignRecipe.setGroup("StorageSign");
+
       getServer().addRecipe(storageSignRecipe);
       logger.trace(mat + "StorageSign Recipe added.");
     }
@@ -87,10 +91,10 @@ public class StorageSignCore extends JavaPlugin implements Listener {
     getServer().getPluginManager().registerEvents(new StorageSignPickupItemEvent(this), this);
     getServer().getPluginManager().registerEvents(new StorageSignItemMoveEvent(this), this);
     logger.trace("no-bud:" + ConfigLoader.getNoBud());
-		if (ConfigLoader.getNoBud()) {
+    if (ConfigLoader.getNoBud()) {
       logger.trace("no-bud is True.");
-			new SignPhysicsEvent(this, logger);
-		}
+      new SignPhysicsEvent(this, logger);
+    }
     _fallingBlockSS = ConfigLoader.getFallingBlockItemSs();
 
     logger.debug("★onEnable:End");

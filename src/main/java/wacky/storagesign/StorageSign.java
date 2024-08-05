@@ -174,7 +174,7 @@ public class StorageSign {
         this.damage = pi.getDamage();
         this.pot = pi.getPotionType();*/
 //        this.potion = new Potion(str[0],logger);
-        this.info = new Potion(str[0], logger);
+        this.info = new PotionInfo(str[0], logger);
       } else if (mat == Material.FIREWORK_ROCKET) {
         this.info = new FireworkRocket(str[0],logger);
       } else if (str[0].contains(":")) {
@@ -235,7 +235,7 @@ public class StorageSign {
       // PotionInfo pi = new PotionInfo(mat, line2);
 
 //      this.potion = new Potion(SSItemData, logger);
-      this.info = new Potion(SSItemData, logger);
+      this.info = new PotionInfo(SSItemData, logger);
 /*      PotionInfo pi = new PotionInfo(this.mat, line2[0], line2[1], line2[2], logger);
       this.mat = pi.getMaterial();
       this.damage = pi.getDamage();
@@ -615,7 +615,8 @@ public class StorageSign {
       // ダメージ値0にする
       return new ItemStack(this.mat, 1);
 
-    } else if (SignDefinition.sign_materials.contains(this.mat)) {
+//    } else if (SignDefinition.sign_materials.contains(this.mat)) {
+    } else if (SignDefinition.signs.contains(this.mat)) {
       logger.debug("any SIGN");
 
       if (this.damage == 0) {
@@ -891,7 +892,8 @@ public class StorageSign {
       return false;
     }
 
-    boolean isSignPost = SignDefinition.sign_materials.contains(item.getType());
+//    boolean isSignPost = SignDefinition.sign_materials.contains(item.getType());
+    boolean isSignPost = SignDefinition.signs.contains(item.getType());
     logger.trace(" isSignPost:" + isSignPost);
     if (isSignPost) {
       // ないと思うけど、metaがなかったら比較できないのでfalse.
@@ -925,8 +927,10 @@ public class StorageSign {
   public static boolean isStorageSign(Block block, Logger logger) {
     logger.debug(" isStorageSign(Block):Start");
 
-    boolean isSignPost = SignDefinition.sign_materials.contains(block.getType());
-    boolean isWallSign = SignDefinition.wall_sign_materials.contains(block.getType());
+//    boolean isSignPost = SignDefinition.sign_materials.contains(block.getType());
+//    boolean isWallSign = SignDefinition.wall_sign_materials.contains(block.getType());
+    boolean isSignPost = SignDefinition.signs.contains(block.getType());
+    boolean isWallSign = SignDefinition.wallSigns.contains(block.getType());
     logger.trace(" block.getType(): " + block.getType());
     logger.trace(" isSignPost(block.getType()): " + isSignPost);
     logger.trace(" isWallSign(block.getType()) :" + isWallSign);

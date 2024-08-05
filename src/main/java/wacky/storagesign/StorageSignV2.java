@@ -2,12 +2,10 @@ package wacky.storagesign;
 
 import com.github.teruteru128.logger.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
-import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
 import org.bukkit.inventory.ItemStack;
@@ -23,7 +21,19 @@ import java.util.*;
  */
 public class StorageSignV2 implements StorageSignV2Interface {
 
+  private static final java.util.logging.Logger logging = org.bukkit.Bukkit.getLogger();
   private static final org.apache.logging.log4j.Logger log = LogManager.getLogger(StorageSign.class);
+
+  public static ItemStack emptyStorageSign(Material mat,Logger logger){
+    ItemStack stack = new ItemStack(mat);
+    ItemMeta meta = stack.getItemMeta();
+    meta.setDisplayName(StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
+    meta.setLore(List.of(StorageSignConfig.defaultData.empty));
+    meta.setMaxStackSize(ConfigLoader.getMaxStackSize());
+
+    stack.setItemMeta(meta);
+    return stack;
+  }
 
   /**
    * StorageSignのアイテム素材.
@@ -39,11 +49,6 @@ public class StorageSignV2 implements StorageSignV2Interface {
    * information
    */
   protected SSInformation info;
-
-  /**
-   * Storage アイテム cord
-   */
-  protected int cord = 0;
 
   /**
    * 看板に収納されているアイテム数.
@@ -123,7 +128,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
     }
 
     // SS特殊itemData などを含めた Material変換器 通す
-    this.materialContent = StorageSignConfig.defaultData.getNewItemName(itemData.split(":")[0]);
+    this.materialContent = StorageSignConfig.defaultData.getMaterial(itemData.split(":")[0]);
 
     // Content 登録されていない場合 AIR で登録
     if(Objects.isNull(materialContent) || Material.AIR.equals(materialContent)){
@@ -178,21 +183,22 @@ public class StorageSignV2 implements StorageSignV2Interface {
    * @return true : Sign である / false : ではない
    */
   protected static boolean isSign(Material material){
-    if(material.data.isAssignableFrom(org.bukkit.block.data.type.Sign.class)) return true;
-    if(material.data.isAssignableFrom(org.bukkit.block.data.type.WallSign.class)) return true;
+    if(material.data.equals(org.bukkit.block.data.type.Sign.class)) return true;
+    if(material.data.equals(org.bukkit.block.data.type.WallSign.class)) return true;
     return false;
   }
 
   public static boolean isFloorSign(Material material) {
-    return material.data.isAssignableFrom(org.bukkit.block.data.type.Sign.class);
+    return material.data.equals(org.bukkit.block.data.type.Sign.class);
   }
 
   public static boolean isWallSign(Material material){
-    return material.data.isAssignableFrom(WallSign.class);
+    return material.data.equals(org.bukkit.block.data.type.WallSign.class);
   }
 
   /**
    * ItemStack に アイテムStorageSign情報を書き込む
+   *
    * @param itemStack 情報を書き込むItemStack
    * @return StorageSign になった ItemStack
    */
@@ -228,6 +234,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
 
   /**
    * 現在の情報を ItemStack に書き込む
+   *
    * @param storageSign 書き込みたい StorageSign
    * @return 成否 true : 成功 / false : 失敗
    */
@@ -246,6 +253,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
 
   /**
    * 現在の情報をブロックに書き込む
+   *
    * @param signBlock Signブロック に持っている情報を書き込む
    * @return 書き込みの成否 true : 成功 / false : 失敗
    */
@@ -397,6 +405,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
   /**
    * アイテムStorageSign が同じアイテムを収納したStorageSignであるかを判定
    * 収納数 amount は比較しない
+   *
    * @param itemStack 比較したい アイテム (StorageSign)
    * @return true : 同一と認める / false : 同一と認めない
    */
@@ -414,7 +423,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
   }
 
   /**
-   * StorageSign の倉庫が空かを確認します.
+   * StorageSign の倉庫在庫が0かを確認します.
    *
    * @return true：空っぽ / false：入ってます
    */
@@ -422,7 +431,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
     return amount == 0;
   }
 
-  ///  以下SS中身のやり取り用  ///
+  // TODO 以下SS中身のやり取り用
 
   /**
    * ブロックStorageSign から アイテムStorageSign へアイテムを入れる
@@ -480,6 +489,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
    */
   public Material getMaterialSign(){return materialSign;}
 
+  // TODO ホッパー処理用（元処理から変更しないための処置なので削除したい）
   public int getAmount(){return amount;}
 
   public void addAmount(int addAmount){amount +=addAmount;}

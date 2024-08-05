@@ -24,10 +24,9 @@ import static org.bukkit.Material.SPRUCE_WALL_SIGN;
 import static org.bukkit.Material.WARPED_SIGN;
 import static org.bukkit.Material.WARPED_WALL_SIGN;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.bukkit.Material;
 
 public class SignDefinition {
@@ -36,13 +35,22 @@ public class SignDefinition {
    * 看板と扱われるアイテム一覧.
    * 看板種類が追加されたら追加する.
    */
-  public static final Set<Material> sign_materials = Collections.unmodifiableSet(
-      EnumSet.of(OAK_SIGN, SPRUCE_SIGN, BIRCH_SIGN, JUNGLE_SIGN, ACACIA_SIGN, DARK_OAK_SIGN, CRIMSON_SIGN, WARPED_SIGN, MANGROVE_SIGN, CHERRY_SIGN, BAMBOO_SIGN));
+ // public static final Set<Material> sign_materials = Collections.unmodifiableSet(
+ //     EnumSet.of(OAK_SIGN, SPRUCE_SIGN, BIRCH_SIGN, JUNGLE_SIGN, ACACIA_SIGN, DARK_OAK_SIGN, CRIMSON_SIGN, WARPED_SIGN, MANGROVE_SIGN, CHERRY_SIGN, BAMBOO_SIGN));
+  public static final List<Material> signs= Arrays.stream(Material.values())
+          .filter(M->M.data.equals(org.bukkit.block.data.type.Sign.class))
+          .toList();
+
   /**
    * 看板と扱われるアイテム一覧.
    * 看板種類が追加されたら追加する.
    */
-  public static final Set<Material> wall_sign_materials = Collections.unmodifiableSet(EnumSet.of(OAK_WALL_SIGN, SPRUCE_WALL_SIGN, BIRCH_WALL_SIGN, JUNGLE_WALL_SIGN, ACACIA_WALL_SIGN, DARK_OAK_WALL_SIGN, CRIMSON_WALL_SIGN, WARPED_WALL_SIGN, MANGROVE_WALL_SIGN, CHERRY_WALL_SIGN, BAMBOO_WALL_SIGN));
+//  public static final Set<Material> wall_sign_materials = Collections.unmodifiableSet(EnumSet.of(OAK_WALL_SIGN, SPRUCE_WALL_SIGN, BIRCH_WALL_SIGN, JUNGLE_WALL_SIGN, ACACIA_WALL_SIGN, DARK_OAK_WALL_SIGN, CRIMSON_WALL_SIGN, WARPED_WALL_SIGN, MANGROVE_WALL_SIGN, CHERRY_WALL_SIGN, BAMBOO_WALL_SIGN));
+
+  public static final List<Material> wallSigns= Arrays.stream(Material.values())
+          .filter(M->M.data.equals(org.bukkit.block.data.type.WallSign.class))
+          .toList();
+
   /**
    * 壁掛け看板と通常看板の変換一覧.
    * 看板種類が追加されたら追加する.

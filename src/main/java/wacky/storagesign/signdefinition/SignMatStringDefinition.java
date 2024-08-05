@@ -13,15 +13,19 @@ import static org.bukkit.Material.OAK_SIGN;
 import static org.bukkit.Material.SPRUCE_SIGN;
 import static org.bukkit.Material.WARPED_SIGN;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import net.minecraft.world.level.levelgen.structure.structures.OceanMonumentPieces;
 import org.bukkit.Material;
 
-@AllArgsConstructor
-@Getter
+//@AllArgsConstructor
+//@Getter
 public enum SignMatStringDefinition {
   OAK_SS("OakStorageSign", OAK_SIGN),
   SPRUCE_SS("SpruceStorageSign", SPRUCE_SIGN),
@@ -38,15 +42,29 @@ public enum SignMatStringDefinition {
   private String materialString;
   private Material material;
 
+  private static final Map<String,Material> matMap;
+  private static final Map<Material,String> strMap;
+
+  private SignMatStringDefinition(String name,Material material){
+    materialString = name;
+    this.material = material;
+  }
+
+  static{
+    matMap = Arrays.stream(values()).collect(Collectors.toMap(S->S.materialString,M->M.material));
+    strMap = Arrays.stream(values()).collect(Collectors.toMap(M->M.material,S->S.materialString));
+  }
+
+
   public static Map<String, Material> asStringMaterialMap() {
-    Map<String, Material> map = new LinkedHashMap<>();
-    Arrays.stream(values()).forEach(e -> map.put(e.materialString, e.material));
-    return map;
+//    Map<String, Material> map = new LinkedHashMap<>();
+//    Arrays.stream(values()).forEach(e -> map.put(e.materialString, e.material));
+    return matMap;
   }
 
   public static Map<Material, String> asMaterialStringMap() {
-    Map<Material, String> map = new LinkedHashMap<>();
-    Arrays.stream(values()).forEach(e -> map.put(e.material, e.materialString));
-    return map;
+//    Map<Material, String> map = new LinkedHashMap<>();
+//    Arrays.stream(values()).forEach(e -> map.put(e.material, e.materialString));
+    return strMap;
   }
 }
