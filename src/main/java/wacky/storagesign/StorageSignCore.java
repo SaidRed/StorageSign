@@ -127,10 +127,10 @@ public class StorageSignCore extends JavaPlugin implements Listener {
     logger.debug("★onSignChangeEvent:Start");
 
     logger.trace("event.isCancelled(): " + event.isCancelled());
-		if (event.isCancelled()) {
+    if (event.isCancelled()) {
       logger.debug("★this Event is Cancelled!");
-			return;
-		}
+      return;
+    }
     Sign sign = (Sign) event.getBlock().getState();
 
     logger.trace("sign.getSide(Side.FRONT).getLine(0):" + sign.getSide(Side.FRONT).getLine(0));

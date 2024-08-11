@@ -20,7 +20,7 @@ import wacky.storagesign.StorageSignConfig;
  *   <div>ItemStack Lora ItemData:</div>
  *   <div>[Category # ""/S/L + Potion ] : [NormalPotionTypeFullName] : [cord # 0:Normal /1:Long /2:Strong]</div>
  * <br>
- * <div>内包するPotionType に関しては NormalPotionType (強化・延長)の無い情報を持たせて、出庫する時だけ Cord値 を含めて作る</div>
+ * <div>内包するPotionType に関しては NormalPotionType (強化・延長の無い情報)を持たせて、出庫・アイテム比較する時だけ Cord値 を含めて作る</div>
  */
 public class PotionInfo extends TypeInformation<PotionType, PotionMeta> implements SSInformation {
 

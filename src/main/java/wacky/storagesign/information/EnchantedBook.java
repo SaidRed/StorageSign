@@ -42,10 +42,6 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
   private static Enchantment getEnchantment(String enchantName) {
     //後ろ切れても可.
     return StorageSignConfig.enchantedBook.getEnchantment(enchantName);
-/*    return org.bukkit.Bukkit.getRegistry(Enchantment.class).stream()
-            .filter(E -> E.getKey().getKey().startsWith(enchantName))
-            .findFirst()
-            .orElse(null);*/
   }
 
   /**

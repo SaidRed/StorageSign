@@ -1,6 +1,5 @@
 package wacky.storagesign.signdefinition;
 
-import static java.util.Map.entry;
 import static org.bukkit.Material.ACACIA_SIGN;
 import static org.bukkit.Material.BAMBOO_SIGN;
 import static org.bukkit.Material.BIRCH_SIGN;
@@ -13,15 +12,10 @@ import static org.bukkit.Material.OAK_SIGN;
 import static org.bukkit.Material.SPRUCE_SIGN;
 import static org.bukkit.Material.WARPED_SIGN;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import net.minecraft.world.level.levelgen.structure.structures.OceanMonumentPieces;
 import org.bukkit.Material;
 
 //@AllArgsConstructor

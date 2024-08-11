@@ -183,9 +183,11 @@ public class StorageSignV2 implements StorageSignV2Interface {
    * @return true : Sign である / false : ではない
    */
   protected static boolean isSign(Material material){
+    return isFloorSign(material) || isWallSign(material);
+    /*
     if(material.data.equals(org.bukkit.block.data.type.Sign.class)) return true;
     if(material.data.equals(org.bukkit.block.data.type.WallSign.class)) return true;
-    return false;
+    return false;*/
   }
 
   public static boolean isFloorSign(Material material) {
@@ -203,7 +205,6 @@ public class StorageSignV2 implements StorageSignV2Interface {
    * @return StorageSign になった ItemStack
    */
   public ItemStack getStorageSign(ItemStack itemStack){
-//    ItemStack itemStack = new ItemStack(materialSign);
     ItemMeta meta = itemStack.getItemMeta();
     Objects.requireNonNull(meta).setDisplayName(StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
     if(isContentEmpty())clear();

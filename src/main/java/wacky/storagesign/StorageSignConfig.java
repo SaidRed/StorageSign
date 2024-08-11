@@ -1,7 +1,9 @@
 package wacky.storagesign;
 
 import org.bukkit.Material;
+import org.bukkit.MusicInstrument;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.meta.MusicInstrumentMeta;
 import org.bukkit.potion.PotionType;
 import wacky.storagesign.information.*;
 
@@ -97,6 +99,7 @@ public class StorageSignConfig {
             entry(TIPPED_ARROW, PotionInfo.class),
             entry(OMINOUS_BOTTLE, OminousBottle.class),
             entry(FIREWORK_ROCKET, FireworkRocket.class),
+            entry(GOAT_HORN, GoatHorn.class),
             entry(WHITE_BANNER, OminousBanner.class)
     );
     public static boolean containsKey(Material material){
@@ -281,7 +284,7 @@ public class StorageSignConfig {
                 : T.toString().replaceAll(del + "|" + st, "");
 
         if (name.length() > 5){
-          String prefix = name.toString().replaceAll("(?<=_).*$","");
+          String prefix = name.replaceAll("(?<=_).*$","");
           int i = exPrefix.getOrDefault(prefix, 5);
           name = name.substring(0,i);
         }
@@ -320,7 +323,6 @@ public class StorageSignConfig {
      */
     public static PotionType getPotionType(String potionTypeName) {
       return Type.PotionTypeItemData.get(potionTypeName);
-      //return ShortNameToTypeMap.getOrDefault(potionTypeName,FullNameToTypeMap.get(potionTypeName));
     }
     /**
      * NormalPotionTypeとCord値から PotionType に変換する
@@ -385,38 +387,87 @@ public class StorageSignConfig {
     );
 
     private static final Map<Enchantment,String> EnchantShortNameMap;
-    private static final Map<String,Enchantment> ShortNameToEnchantmentMap;
+    private static final Map<String,Enchantment> NameToEnchantmentMap;
     private static final Map<Enchantment,String> EnchantFullNameMap;
-    private static final Map<String,Enchantment> FullNameToEnchantmentMap;
 
     static{
       EnchantShortNameMap = new HashMap<>();
-      ShortNameToEnchantmentMap = new HashMap<>();
       EnchantFullNameMap = new HashMap<>();
-      FullNameToEnchantmentMap = new HashMap<>();
+      NameToEnchantmentMap = new HashMap<>();
       List<Enchantment> enchants = org.bukkit.Bukkit.getRegistry(Enchantment.class).stream().toList();
       for(Enchantment E : enchants){
         String name = E.getKey().getKey();
         EnchantFullNameMap.put(E,name);
-        FullNameToEnchantmentMap.put(name,E);
+        NameToEnchantmentMap.put(name,E);
         if (name.length() > 5) name = name.substring(0,name.matches("(^" + String.join("|^", exPrefix) + ").*") ? 6: 5);
         EnchantShortNameMap.put(E,name);
-        ShortNameToEnchantmentMap.put(name,E);
+        if(!NameToEnchantmentMap.containsKey(name))NameToEnchantmentMap.put(name,E);
       }
     }
 
+    /**
+     * ItemData から Enchantment を取得
+     * ロングネーム&ショートネーム
+     * @param enchantName 取得したいエンチャントの ItemData
+     * @return ヒットした Enchantment
+     */
     public static Enchantment getEnchantment(String enchantName){
-      return ShortNameToEnchantmentMap.getOrDefault(enchantName,FullNameToEnchantmentMap.get(enchantName));
+      return NameToEnchantmentMap.get(enchantName);
     }
 
+    /**
+     * Enchantment から ブロックStorageSign に記載する ItemData
+     * @param enchantment 取得したいエンチャントメタ
+     * @return ItemData ショートネーム
+     */
     public static String getEnchantShortName(Enchantment enchantment){
       return EnchantShortNameMap.get(enchantment);
     }
 
+    /**
+     * Enchantment から アイテムStorageSign に記載する ItemData
+     * @param enchantment 取得したいエンチャントメタ
+     * @return ItemData フルネーム
+     */
     public static String getEnchantFullName(Enchantment enchantment){
       return EnchantFullNameMap.get(enchantment);
     }
 
   }
 
+  public static class goatHorn{
+    /**
+     * 角笛の音表記の後にアイテム名がくっついてるので削除用の文字列
+     */
+    private static final String itemName = "_goat_horn";
+
+    private static Map<String,MusicInstrument> musicInstrumentMap;
+    private static Map<MusicInstrument,String> musicNameMap;
+
+    static {
+      musicInstrumentMap = new HashMap<>();
+      musicNameMap = new HashMap<>();
+
+      List<MusicInstrument> musics = org.bukkit.Bukkit.getRegistry(MusicInstrument.class).stream().toList();
+      for(MusicInstrument music : musics){
+        String fullName = music.getKey().getKey().toString();
+        String shortName = fullName.replaceAll(itemName + "$","");
+
+        musicNameMap.put(music,shortName);
+        musicInstrumentMap.put(shortName,music);
+      }
+    }
+
+    public static MusicInstrument getMusicInstrument(String musicName) {
+      return musicInstrumentMap.get(musicName);
+    }
+
+    public static String getMusicName(MusicInstrument music) {
+      return musicNameMap.get(music);
+    }
+
+    //if(itemMeta instanceof MusicInstrumentMeta meta)
+    //MusicInstrument music = meta.getInstrument();
+    //String name = music.getKey().getKey().toString();
+  }
 }
