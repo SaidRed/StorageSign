@@ -14,7 +14,7 @@ public class OminousBanner extends NormalInformation implements SSInformation{
    * 不吉な旗フラグ
    * true : 不吉な旗 / false : 白旗
    */
-  private boolean ominousBanner = false;
+  private final boolean ominousBanner;
 
   public OminousBanner(ItemStack itemStack, Logger logger) {
     this(isOminousBanner((BannerMeta) itemStack.getItemMeta()), logger);

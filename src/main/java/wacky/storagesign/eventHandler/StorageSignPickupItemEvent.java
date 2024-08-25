@@ -33,8 +33,6 @@ public class StorageSignPickupItemEvent implements Listener {
     if (event.getEntityType() == EntityType.PLAYER && ConfigLoader.getAutoCollect()) {
       Player player = (Player) event.getEntity();
       PlayerInventory playerInv = player.getInventory();
-//      ItemStack item = event.getItem().getItemStack();
-//      StorageSign storagesign = null;
 
       logger.trace("!player.hasPermission(\"storagesign.autocollect\"): " + !player.hasPermission("storagesign.autocollect"));
       //ここでは、エラーを出さずに無視する
@@ -42,11 +40,6 @@ public class StorageSignPickupItemEvent implements Listener {
         logger.debug("★This user hasn't Permission. storagesign.autocollect.");
         return;
       }
-
-//      boolean mainHandhasSS = StorageSign.isStorageSign(playerInv.getItemInMainHand(), logger);
-//      boolean offHandhasSS = StorageSign.isStorageSign(playerInv.getItemInOffHand(), logger);
-//      logger.trace("mainHandhasSS: " + mainHandhasSS);
-//      logger.trace("offHandisSS: " + offHandhasSS);
       logger.debug("check mainHand has SS.");
       ItemStack SS = null;
       if (StorageSignV2.isStorageSign(playerInv.getItemInMainHand())) {
@@ -66,60 +59,6 @@ public class StorageSignPickupItemEvent implements Listener {
         }
       }
     }
-/*
-      if (mainHandhasSS) {
-        logger.debug("MainHand has StorageSign.");
-        storagesign = new StorageSign(playerInv.getItemInMainHand(), logger);
-
-        logger.trace("storagesign.getContents(): " + storagesign.getContents());
-        if (storagesign.getContents() != null) {
-          logger.debug("This SS is not Empty");
-
-          logger.trace("storagesign.isSimilar(item): " + storagesign.isSimilar(item));
-          logger.trace("playerInv.containsAtLeast(item, item.getMaxStackSize()): " + playerInv.containsAtLeast(item, item.getMaxStackSize()));
-          logger.trace("storagesign.getStackSize(): " + storagesign.getStackSize());
-          if (storagesign.isSimilar(item) && playerInv.containsAtLeast(item, item.getMaxStackSize())
-                  && storagesign.getStackSize() == 1) {
-            logger.debug("★Pickup Item to StorageSign.");
-            storagesign.addAmount(item.getAmount());
-
-            //1.9,10ではバグる？
-            playerInv.removeItem(item);
-            playerInv.setItemInMainHand(storagesign.getStorageSign());
-            player.updateInventory();
-            //event.getItem().remove();
-            //player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
-            //event.setCancelled(true);
-            return;
-          }
-        }
-      }
-      logger.debug("check offHand has SS.");
-      if (offHandhasSS) {//メインハンドで回収されなかった時
-        logger.debug("OffHand has StorageSign.");
-        storagesign = new StorageSign(playerInv.getItemInOffHand(), logger);
-        if (storagesign.getContents() != null) {
-          logger.debug("This SS is not Empty");
-
-          logger.trace("storagesign.isSimilar(item): " + storagesign.isSimilar(item));
-          logger.trace("playerInv.containsAtLeast(item, item.getMaxStackSize()): " + playerInv.containsAtLeast(item, item.getMaxStackSize()));
-          logger.trace("storagesign.getStackSize(): " + storagesign.getStackSize());
-          if (storagesign.isSimilar(item) && playerInv.containsAtLeast(item, item.getMaxStackSize())
-                  && storagesign.getStackSize() == 1) {
-            logger.debug("★Pickup Item to StorageSign.");
-            storagesign.addAmount(item.getAmount());
-            playerInv.removeItem(item);
-            playerInv.setItemInOffHand(storagesign.getStorageSign());
-            player.updateInventory();
-            //event.getItem().remove();
-            //player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
-            //event.setCancelled(true);
-            return;
-          }
-        }
-      }
-    }
-    */
     //SSをプレイヤー以外拾えなくする
     if (event.getEntityType() != EntityType.PLAYER) {
       logger.debug("This Entity isn't Player.");

@@ -14,7 +14,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import wacky.storagesign.*;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -35,9 +34,7 @@ public class StorageSignItemMoveEvent implements Listener {
   public void onStorageSignAutoImport(InventoryMoveItemEvent event) {
     logger.debug("★onItemMove: Start");
     
-    Inventory destination = event.getDestination(); // 送り先
-    Inventory source = event.getSource();           // 送り主
-    Inventory initiator = event.getInitiator();     // 転送を開始した主。奪った場合は送り先。押し込む時は送り主。
+    Inventory destination = event.getDestination();
     
     ItemStack moveItem = event.getItem();
     

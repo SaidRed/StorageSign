@@ -6,9 +6,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Sign;
-import org.bukkit.block.data.type.WallSign;
-import org.bukkit.block.sign.Side;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,7 +17,6 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import wacky.storagesign.ConfigLoader;
-import wacky.storagesign.StorageSignConfig;
 import wacky.storagesign.StorageSignCore;
 import wacky.storagesign.StorageSignV2;
 
@@ -87,19 +83,10 @@ public class StorageSignBlockPlaceBreak implements Listener {
       StorageSignV2 storageSign = new StorageSignV2(event.getItemInHand(), logger);
 
       Block block = event.getBlock();
-  /*    for (int i = 0; i < 4; i++) {
-        logger.trace(" set Line i:" + i + ". Text: " + storageSign.getSigntext(i));
-        sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
-      }*/
       
       logger.debug("UpdateSign.");
       //ダークオークの場合文字色を白くする
       storageSign.playerPlace(block);
-
-      //    logger.trace("storageSign.getSmat() == Material.DARK_OAK_SIGN: " + (storageSign.getSmat() == Material.DARK_OAK_SIGN));
-      //logger.trace("storageSign.materialContent: " + storageSign.materialContent.toString());
-      
-
 
       //時差発動が必要らしい
       player.closeInventory();
@@ -110,7 +97,7 @@ public class StorageSignBlockPlaceBreak implements Listener {
   private class entityChangeBlock extends dropStorageSign implements Listener {
     @EventHandler
     public void onEntityChangeBlock(EntityChangeBlockEvent event) {
-      if (event.getEntity() instanceof FallingBlock fallingBlock) {
+      if (event.getEntity() instanceof FallingBlock) {
         dropRelativeSign(event.getBlock());
       }
     }
@@ -133,34 +120,7 @@ public class StorageSignBlockPlaceBreak implements Listener {
         logger.trace("  relBlock: " + relBlock);
         if (StorageSignV2.isLinkStorageSign(relBlock,block))
           breakSignMap.put(relBlock.getLocation(),relBlock);
-        
-        //if (face.equals(BlockFace.UP) && StorageSignConfig.defaultData.isFloorSign(relBlock.getType())) {
-        //  breakSignMap.put(relBlock.getLocation(), relBlock);
-        //} else if (relBlock.getBlockData() instanceof WallSign wallSign)
-        //  if (wallSign.getFaces().equals(face.getOppositeFace()))
-        //    breakSignMap.put(relBlock.getLocation(), relBlock);
       }
-
-      /*
-      Block relBlock = block.getRelative(BlockFace.UP);
-      logger.trace("  relBlock: " + relBlock);
-      if (relBlock.getBlockData() instanceof Sign) {
-          breakSignMap.put(relBlock.getLocation(), relBlock);
-      }
-
-      //東西南北で判定
-      BlockFace[] faces = {BlockFace.SOUTH,
-              BlockFace.NORTH, BlockFace.EAST, BlockFace.WEST};
-      for (BlockFace face : faces) {
-        relBlock = block.getRelative(face);
-        logger.trace("  relBlock: " + relBlock);
-        logger.trace("  relIsStorageSign: " + StorageSignV2.isStorageSign(block));
-
-        if (relBlock.getBlockData() instanceof WallSign sign) {
-          if (sign.getFacing() == face)
-            breakSignMap.put(relBlock.getLocation(), relBlock);
-        }
-      }*/
 
       logger.trace(" breakSignMap.isEmpty(): " + breakSignMap.isEmpty());
       if (breakSignMap.isEmpty()) {

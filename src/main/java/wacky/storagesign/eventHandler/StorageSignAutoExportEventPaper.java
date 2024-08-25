@@ -10,7 +10,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import wacky.storagesign.StorageSignCore;
 import wacky.storagesign.StorageSignV2;
 
@@ -84,7 +83,7 @@ public class StorageSignAutoExportEventPaper implements Listener {
         BlockFace face = ((Directional) souBlock.getFirst().getBlockData()).getFacing().getOppositeFace();
         if (destination instanceof BrewerInventory) {
           // 醸造台
-          List<Boolean> check = new ArrayList<Boolean>();
+          List<Boolean> check = new ArrayList<>();
           
           for (int i : StorageSignAutoExportEvent.BrewingStandImportTest.getSlotsForFace(face)) {
             if (i == 3) {
@@ -111,7 +110,7 @@ public class StorageSignAutoExportEventPaper implements Listener {
           if (!check.contains(true)) return;
         } else if (destination instanceof FurnaceInventory) {
           // カマド
-          List<Boolean> check = new ArrayList<Boolean>();
+          List<Boolean> check = new ArrayList<>();
           
           for (int i : StorageSignAutoExportEvent.FurnaceImportTest.getSlotsForFace(face)) {
             if (i != 1) {
@@ -190,78 +189,4 @@ public class StorageSignAutoExportEventPaper implements Listener {
     }
     return moveItem;
   }
-  
-  /*
-  public static class FurnaceImportTest{
-    private static final int[] SLOTS_FOR_UP = new int[]{0};
-    private static final int[] SLOTS_FOR_DOWN = new int[]{1};
-    private static final int[] SLOTS_FOR_SIDES = new int[]{1};
-    
-    public static int[] getSlotsForFace(BlockFace face) {
-      return face == BlockFace.UP ? SLOTS_FOR_UP : (face == BlockFace.DOWN ? SLOTS_FOR_DOWN : SLOTS_FOR_SIDES);
-    }
-  }
-  
-  
-  public static class BrewingStandImportTest{
-    private static final int[] SLOTS_FOR_UP = new int[]{3};
-    private static final int[] SLOTS_FOR_DOWN = new int[]{0, 1, 2, 3};
-    private static final int[] SLOTS_FOR_SIDES = new int[]{0, 1, 2, 4};
-    
-    public static int[] getSlotsForFace(BlockFace face) {
-      return face == BlockFace.UP ? SLOTS_FOR_UP : (face == BlockFace.DOWN ? SLOTS_FOR_DOWN : SLOTS_FOR_SIDES);
-    }
-    
-    public static class exportTask extends BukkitRunnable {
-      private final Container destination;
-      //
-      //private final Inventory desInventory;
-      // 転送できたアイテム数の確認のため 送付先インベントリのバックアップ
-      private final Inventory beforeInventory;
-      // 実際に入れ込むインベントリ情報
-      private final Container source;
-      // 確認するスロット
-      private final int slot;
-      // 移動するアイテム情報
-      //private final ItemStack moveItem;
-      // チェック結果
-      //private boolean importCheck;
-      //
-      private StorageSignV2 SS;
-      //
-      private Block SSBlock;
-      
-      exportTask(Inventory desInventory, Container desContainer, Container souContainer, int i, StorageSignV2 SS, Block SSBlock) {
-        this.destination = desContainer;
-        this.beforeInventory = desInventory;
-        //this.beforeInventory = souSnapshotInventory;
-        this.source = souContainer;
-        //this.moveItem = moveItem;
-        this.slot = i;
-        //this.importCheck = importCheck;
-        this.SS = SS;
-        this.SSBlock = SSBlock;
-      }
-      
-      private ItemStack[] nonNullItemStack(ItemStack[] itemStacks){
-        return Arrays.stream(itemStacks).filter(Objects::nonNull).toArray(ItemStack[]::new);
-      }
-      
-      @Override
-      public void run() {
-        ItemStack moveItem = destination.getInventory().getItem(slot);
-        
-        if (moveItem == null) return;
-        int amount = moveItem.getAmount();
-        if (SS.getAmount() < amount) {
-          SS.setAmount(0);
-          moveItem.setAmount(SS.getAmount());
-        } else {
-          SS.setAmount(SS.getAmount() - amount);
-        }
-        SS.setContentData(SSBlock);
-        source.getInventory().addItem(moveItem);
-      }
-    }
-  }*/
 }

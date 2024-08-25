@@ -1,8 +1,6 @@
 package wacky.storagesign;
 
 import com.github.teruteru128.logger.Logger;
-
-import org.apache.logging.log4j.LogManager;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -24,7 +22,6 @@ import java.util.Arrays;
 
 public class StorageSignCore extends JavaPlugin implements Listener {
 
-  private static final org.apache.logging.log4j.Logger log = LogManager.getLogger(StorageSignCore.class);
   static BannerMeta ominousBannerMeta;
   public Logger logger;
   private boolean _fallingBlockSS;

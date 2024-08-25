@@ -21,8 +21,6 @@ public class StorageSignAutoExportEventTask implements Listener {
   private final JavaPlugin plugin;
   private final Logger logger;
   
-  //Set<Block> resetBlockList = new HashSet<>();
-  
   public StorageSignAutoExportEventTask(StorageSignCore plugin) {
     this.plugin = plugin;
     this.logger = plugin.logger;
@@ -58,15 +56,11 @@ public class StorageSignAutoExportEventTask implements Listener {
               && (source.getHolder() instanceof org.bukkit.block.data.type.Hopper));
       
       // 情報だけ渡し1チックずらしてから判定・アイテム送付をする
-      new exportTask(souHolder.getSnapshotInventory(), souHolder, moveItem, SS, checkBlock, isUpDownHopper).runTask(plugin);
+      new exportTask(souHolder, moveItem, SS, checkBlock, isUpDownHopper).runTask(plugin);
     }
   }
   
   public static class exportTask extends BukkitRunnable {
-    // 転送できたアイテム数の確認のため 送付先インベントリのバックアップ
-    private final Inventory beforeInventory;
-    // 転送できたアイテム数の確認のため 転送先のインベントリ情報
-    //private final Container destination;
     // 実際に入れ込むインベントリ情報
     private final Container source;
     // 移動するアイテム情報
@@ -76,16 +70,11 @@ public class StorageSignAutoExportEventTask implements Listener {
     // SS の情報を書き込むためのブロック情報
     private final Block signBlock;
     
-    private final boolean isUpDownHopper;
-    
-    exportTask(Inventory beforeInventory, Container source, ItemStack moveItem, StorageSignV2 SS, Block signBlock, boolean isUpDownHopper) {
-      this.beforeInventory = beforeInventory;
-      //this.destination = destination;
+    exportTask(Container source, ItemStack moveItem, StorageSignV2 SS, Block signBlock, boolean isUpDownHopper) {
       this.source = source;
       this.moveItem = moveItem;
       this.targetStorageSign = SS;
       this.signBlock = signBlock;
-      this.isUpDownHopper = isUpDownHopper;
     }
     
     @Override

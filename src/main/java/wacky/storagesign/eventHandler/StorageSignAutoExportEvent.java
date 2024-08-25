@@ -29,9 +29,9 @@ public class StorageSignAutoExportEvent implements Listener {
   public void onAutoExport(InventoryMoveItemEvent event) {
     logger.debug("Export: Start");
     
-    Inventory destination = event.getDestination(); // 送り先
-    Inventory eventSource = event.getSource();      // 送り主
-    Inventory initiator = event.getInitiator();     // 転送を開始した主。奪った場合は送り先。押し込む時は送り主。
+    Inventory destination = event.getDestination();
+    Inventory eventSource = event.getSource();
+    Inventory initiator = event.getInitiator();
     
     ItemStack moveItem = event.getItem().clone();
     

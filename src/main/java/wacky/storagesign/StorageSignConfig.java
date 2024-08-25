@@ -1,11 +1,9 @@
 package wacky.storagesign;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.MusicInstrument;
 import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.*;
 import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 import wacky.storagesign.information.*;
@@ -225,7 +223,7 @@ public class StorageSignConfig {
             new cordList("LONG_",1),
             new cordList("STRONG_",2)
     );
-    private static final record cordList(String prefix, Integer cord){}
+    private record cordList(String prefix, Integer cord){}
 
     /**
      * 名前の先頭5文字に問題があるので削除するプレフィックスリスト

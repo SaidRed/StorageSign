@@ -1,7 +1,6 @@
 package wacky.storagesign;
 
 import com.github.teruteru128.logger.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -23,9 +22,6 @@ import java.util.*;
  * ストレージサインの情報整理用中間処理
  */
 public class StorageSignV2 implements StorageSignV2Interface {
-
-  private static final java.util.logging.Logger logging = org.bukkit.Bukkit.getLogger();
-  private static final org.apache.logging.log4j.Logger log = LogManager.getLogger(StorageSign.class);
 
   public static ItemStack emptyStorageSign(Material mat,Logger logger){
     ItemStack stack = new ItemStack(mat);
@@ -56,7 +52,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
   /**
    * 看板に収納されているアイテム数.
    */
-  protected int amount = 0;
+  protected int amount;
 
   /**
    * 看板の中身が登録されているか.

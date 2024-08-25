@@ -194,12 +194,6 @@ public class StorageSignPlayerEvent implements Listener {
               }
             }
           }else{
-            /*
-            for(int i = 0; i < playerInventory.getSize(); i++) {
-              if (playerInventory.getItem(i) != null && clickBlockSSData.importContentItem(playerInventory.getItem(i))) {
-                playerInventory.clear(i);
-              }
-            }*/
             for(ItemStack item:playerInventory.getContents()){
               if (item != null && clickBlockSSData.importContentItem(item)){
                 playerInventory.remove(item);
@@ -257,27 +251,6 @@ public class StorageSignPlayerEvent implements Listener {
 
     }
   }
-
-  /*
-  private final Map<Material,DyeColor> DayColor = Map.ofEntries(
-          Map.entry(Material.WHITE_DYE, org.bukkit.DyeColor.WHITE),
-          Map.entry(Material.ORANGE_DYE, org.bukkit.DyeColor.ORANGE),
-          Map.entry(Material.MAGENTA_DYE, org.bukkit.DyeColor.MAGENTA),
-          Map.entry(Material.LIGHT_BLUE_DYE, org.bukkit.DyeColor.LIGHT_BLUE),
-          Map.entry(Material.YELLOW_DYE, org.bukkit.DyeColor.YELLOW),
-          Map.entry(Material.LIME_DYE, org.bukkit.DyeColor.LIME),
-          Map.entry(Material.PINK_DYE, org.bukkit.DyeColor.PINK),
-          Map.entry(Material.GRAY_DYE, org.bukkit.DyeColor.GRAY),
-          Map.entry(Material.LIGHT_GRAY_DYE, org.bukkit.DyeColor.LIGHT_GRAY),
-          Map.entry(Material.CYAN_DYE, org.bukkit.DyeColor.CYAN),
-          Map.entry(Material.PURPLE_DYE, org.bukkit.DyeColor.PURPLE),
-          Map.entry(Material.BLUE_DYE, org.bukkit.DyeColor.BLUE),
-          Map.entry(Material.BROWN_DYE, org.bukkit.DyeColor.BROWN),
-          Map.entry(Material.GREEN_DYE, org.bukkit.DyeColor.GREEN),
-          Map.entry(Material.RED_DYE, org.bukkit.DyeColor.RED),
-          Map.entry(Material.BLACK_DYE, org.bukkit.DyeColor.BLACK)
-  );
-  */
   private static final Map<Material,DyeColor> DayColor = new HashMap<>();
   
   static{
