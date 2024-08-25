@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="StorageSign:jar2">
-    <output-path>$USER_HOME$/AppData/Roaming/spigot_minecraft/1.21.0_build105/plugins</output-path>
+  <artifact type="jar" name="StorageSign:jar_spigot1210">
+    <output-path>$USER_HOME$/AppData/Roaming/BungeeCord_minecraft/spigot/1_21_0/plugins</output-path>
     <root id="archive" name="StorageSign.jar">
       <element id="module-output" name="StorageSign" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/logging/log4j/log4j-core/2.23.1/log4j-core-2.23.1.jar" path-in-jar="/" />

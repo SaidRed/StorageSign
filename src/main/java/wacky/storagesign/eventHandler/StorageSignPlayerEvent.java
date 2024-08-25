@@ -1,9 +1,12 @@
-package wacky.storagesign.event;
+package wacky.storagesign.eventHandler;
 
 import com.github.teruteru128.logger.Logger;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
+import org.bukkit.block.sign.Side;
+import org.bukkit.block.sign.SignSide;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -17,6 +20,7 @@ import wacky.storagesign.ConfigLoader;
 import wacky.storagesign.StorageSignCore;
 import wacky.storagesign.StorageSignV2;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -137,7 +141,7 @@ public class StorageSignPlayerEvent implements Listener {
           // Block SS In Item is StorageSign <- import SS ItemStack
           // 手持ちSS の SS内入庫
           if(clickBlockSSData.SSExchangeExport(itemMainHandSSData,itemMainHand)){
-            clickBlockSSData.setStorageData(clickBlock);
+            clickBlockSSData.setContentData(clickBlock);
 
           }
 
@@ -159,18 +163,35 @@ public class StorageSignPlayerEvent implements Listener {
         } else if(clickBlockSSData.isContentItemEquals(itemMainHand) &&
                 ConfigLoader.getManualImport()) {
           //入庫
-          boolean isDye = itemMainHand != null && isDye(itemMainHand);
-          boolean isSac = itemMainHand != null && isSac(itemMainHand);
-
-          logger.trace("itemMainHand:" + itemMainHand);
-          logger.trace("isDye:" + isDye);
-          logger.trace("isSac:" + isSac);
-
+          
           logger.debug("StorageSign Content import.");
           if(player.isSneaking()) {
-            if (clickBlockSSData.importContentItem(itemMainHand)) {
-              playerInventory.clear(playerInventory.getHeldItemSlot());
-
+            if(clickBlockSSData.isContentItemEquals(itemMainHand)) {
+              Sign sign = (Sign) clickBlock.getState();
+              SignSide side = sign.getSide(Side.FRONT);
+              
+              if (!player.getGameMode().equals(GameMode.ADVENTURE)
+                      && (
+                              (isDye(itemMainHand) && ! side.getColor().equals(getDyeColor(itemMainHand)))
+                              || (isSac(itemMainHand) && side.isGlowingText() != isGlowSac(itemMainHand))
+                      )
+              ) {
+                //DYE/INKの時は色付け処理
+                
+                if (isDye(itemMainHand)) {
+                  side.setColor(getDyeColor(itemMainHand)); //同色用
+                } else if (isSac(itemMainHand)) {
+                  side.setGlowingText(isGlowSac(itemMainHand)); //イカスミ用
+                }
+                
+                itemMainHand.setAmount(itemMainHand.getAmount() - 1);
+                sign.update();
+              } else {
+                if (clickBlockSSData.importContentItem(itemMainHand)) {
+                  playerInventory.clear(playerInventory.getHeldItemSlot());
+                  
+                }
+              }
             }
           }else{
             /*
@@ -188,11 +209,39 @@ public class StorageSignPlayerEvent implements Listener {
         } else if(ConfigLoader.getManualImport()){
           //出庫
           logger.debug("Export StorageSign Item.");
-
+          
+          boolean isDye = itemMainHand != null && isDye(itemMainHand);
+          boolean isSac = itemMainHand != null && isSac(itemMainHand);
+          
+          logger.trace("itemMainHand:" + itemMainHand);
+          logger.trace("isDye:" + isDye);
+          logger.trace("isSac:" + isSac);
+          
+          //染料の場合、放出せずに看板に色がつく
+          if(!player.getGameMode().equals(GameMode.ADVENTURE)){
+            if (isDye || isSac){
+              logger.debug("★Set SignColor.");
+              event.setUseItemInHand(Event.Result.ALLOW);
+              //最初にDENYにしてたので戻す、同色染料が使えない。
+              event.setUseInteractedBlock(Event.Result.ALLOW);
+              
+              SignSide side = ((Sign)clickBlock.getState()).getSide(Side.FRONT);
+              if (isDye) {
+                logger.debug("mainHandItem is Dye.");
+                side.setColor(getDyeColor(itemMainHand)); //同色用
+                return;
+              }
+              if (isSac(itemMainHand)) {
+                logger.debug("mainHandItem is Sac.");
+                side.setGlowingText(isGlowSac(itemMainHand)); //イカスミ用
+                return;
+              }
+            }
+          }
           logger.trace("player.isSneaking(): " + player.isSneaking());
           if(! clickBlockSSData.isContentEmpty()) {
             ItemStack item = clickBlockSSData.outputContentItem(player.isSneaking());
-
+            
             logger.debug("drop Item.");
             Location loc = player.getLocation();
             loc.setY(loc.getY() + 0.5);
@@ -203,36 +252,13 @@ public class StorageSignPlayerEvent implements Listener {
 
       logger.debug("SignTextUpdate.");
       logger.debug("★ItemRegist: End");
-      clickBlockSSData.setStorageData(clickBlock);
+      clickBlockSSData.setContentData(clickBlock);
       player.updateInventory();
 
     }
   }
 
   /*
-  //染料の場合、放出せずに看板に色がつく
-            if(!player.getGameMode().equals(GameMode.ADVENTURE)){
-              if (isDye || isSac){
-                logger.debug("★Set SignColor.");
-                event.setUseItemInHand(Event.Result.ALLOW);
-                //最初にDENYにしてたので戻す、同色染料が使えない。
-                event.setUseInteractedBlock(Event.Result.ALLOW);
-
-                SignSide side = ((Sign)clickBlock.getState()).getSide(Side.FRONT);
-                if (isDye) {
-                  logger.debug("mainHandItem is Dye.");
-                  side.setColor(getDyeColor(itemMainHand)); //同色用
-                  return;
-                }
-                if (isSac(itemMainHand)) {
-                  logger.debug("mainHandItem is Sac.");
-                  side.setGlowingText(isGlowSac(itemMainHand)); //イカスミ用
-                  return;
-                }
-              }
-            } else
-   */
-
   private final Map<Material,DyeColor> DayColor = Map.ofEntries(
           Map.entry(Material.WHITE_DYE, org.bukkit.DyeColor.WHITE),
           Map.entry(Material.ORANGE_DYE, org.bukkit.DyeColor.ORANGE),
@@ -251,6 +277,14 @@ public class StorageSignPlayerEvent implements Listener {
           Map.entry(Material.RED_DYE, org.bukkit.DyeColor.RED),
           Map.entry(Material.BLACK_DYE, org.bukkit.DyeColor.BLACK)
   );
+  */
+  private static final Map<Material,DyeColor> DayColor = new HashMap<>();
+  
+  static{
+    for(DyeColor c : DyeColor.values()){
+      DayColor.put(Material.getMaterial(c.toString() + "_DYE"),c);
+    }
+  }
 
   private boolean isDye(ItemStack item) {
     return DayColor.containsKey(item.getType());

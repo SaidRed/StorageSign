@@ -1,44 +1,321 @@
-package wacky.storagesign.event;
+package wacky.storagesign.eventHandler;
 
 import com.github.teruteru128.logger.Logger;
-import org.bukkit.Material;
+
 import org.bukkit.block.*;
 import org.bukkit.block.data.type.WallSign;
-import org.bukkit.entity.Minecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
-import wacky.storagesign.ConfigLoader;
-//import wacky.storagesign.StorageSign;
-import wacky.storagesign.StorageSignV2;
-import wacky.storagesign.StorageSignCore;
-import wacky.storagesign.signdefinition.SignDefinition;
+import org.bukkit.scheduler.BukkitRunnable;
+import wacky.storagesign.*;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class StorageSignItemMoveEvent implements Listener {
 
+  private final JavaPlugin plugin;
   private final Logger logger;
 
-  private BlockFace[] faceList = {BlockFace.UP, BlockFace.SOUTH, BlockFace.NORTH, BlockFace.EAST, BlockFace.WEST};
-
+  private static final BlockFace[] faceList = {BlockFace.UP, BlockFace.SOUTH, BlockFace.NORTH, BlockFace.EAST, BlockFace.WEST};
+  
   public StorageSignItemMoveEvent(StorageSignCore plugin){
+    this.plugin = plugin;
     this.logger = plugin.logger;
   }
-
+  
   @EventHandler
-  public void onItemMove(InventoryMoveItemEvent event) {
+  //public void onItemMove(InventoryMoveItemEvent event) {
+  public void onStorageSignAutoImport(InventoryMoveItemEvent event) {
     logger.debug("★onItemMove: Start");
-    logger.trace("event.isCancelled(): " + event.isCancelled());
-    if (event.isCancelled()) {
-      logger.debug("★this Event is Cancelled!");
-      return;
+    
+    Inventory destination = event.getDestination(); // 送り先
+    Inventory source = event.getSource();           // 送り主
+    Inventory initiator = event.getInitiator();     // 転送を開始した主。奪った場合は送り先。押し込む時は送り主。
+    
+    ItemStack moveItem = event.getItem();
+    
+    if (!destination.containsAtLeast(moveItem, moveItem.getMaxStackSize())) return;
+    if (destination.getHolder() instanceof Container holder){
+      Block block = holder.getBlock();
+      
+      // 醸造台に SS 貼られないからスキップ
+      if (holder instanceof BrewingStand) return;
+      
+      for (BlockFace face : faceList) {
+        Block tar = block.getRelative(face);
+        if (!StorageSignV2.isLinkStorageSign(tar, block)) continue;
+        /*
+        if (((BlockInventoryHolder) destination.getHolder()).getBlock().getState() instanceof Hopper) {
+          if (destination.equals(initiator)) {
+            // 送付元に貼られている SS から奪う場合
+            // SS の引っこ抜きと押し込みが重複しないように片方だけキャンセルするようにしてみる
+            Block upBlock = sourceBlock.getRelative(BlockFace.UP);
+            if (upBlock.getState() instanceof Hopper) {
+              if (((org.bukkit.block.data.type.Hopper) upBlock.getBlockData()).getFacing().equals(BlockFace.DOWN)) {
+                event.setCancelled(true);
+                return;
+              }
+            }
+          }
+        }*/
+        
+        StorageSignV2 SS = new StorageSignV2(tar, logger);
+        if (!SS.isContentItemEquals(moveItem)) continue;
+        
+        new importTask(holder.getSnapshotInventory(),block,SS,tar).runTask(plugin);
+        /*if (holder instanceof BrewingStand stand) {
+          // 醸造台に SS 貼られないからスキップ
+        }else{
+          new importTask(holder.getSnapshotInventory(),block,SS,tar).runTask(plugin);
+        }*/
+      }
     }
+  }
+  
+  public static class importTask extends BukkitRunnable {
+    private final Inventory snapshotInventory;
+    private final Block containerBlock;
+    private final StorageSignV2 storageSign;
+    private final Block signBlock;
+    
+    importTask(Inventory snapshotInventory, Block containerBlock, StorageSignV2 storageSign, Block signBlock) {
+      this.snapshotInventory = snapshotInventory;
+      this.containerBlock = containerBlock;
+      this.storageSign = storageSign;
+      this.signBlock = signBlock;
+    }
+    
+    private ItemStack[] nonNullItemStacks(ItemStack[] itemStacks){
+      return Arrays.stream(itemStacks).filter(Objects::nonNull).toArray(ItemStack[]::new);
+    }
+    
+    @Override
+    public void run() {
+      // コピーから旧インベントリ分のアイテム消して実際に増えたアイテムをチェック
+      Container tarInventory = (Container) containerBlock.getState();
+      Inventory tarSnapshotInventory = tarInventory.getSnapshotInventory();
+      tarSnapshotInventory.removeItem(nonNullItemStacks(snapshotInventory.getContents()));
+      
+      for (ItemStack item : nonNullItemStacks(tarSnapshotInventory.getContents())){
+        // SS にねじ込む
+        if(storageSign.importContentItem(item)){
+          storageSign.setContentData(signBlock);
+          tarInventory.getInventory().removeItem(item);
+          break;
+        }
+      }
+      
+      //ItemStack[] si = nonNullItemStacks(snapshotInventory.getContents());
+      //ItemStack[] ti = nonNullItemStacks(tarInventory.getInventory().getContents());
+      //ItemStack[] tsi = nonNullItemStacks(tarSnapshotInventory.getContents());
+      //tarSnapshotInventory.removeItem(nonNullItemStacks(snapshotInventory.getContents()));
+//      tsi = nonNullItemStacks(tarSnapshotInventory.getContents());
+      /*int i;
+      for(ItemStack item : nonNullItemStacks(snapshotInventory.getContents()) ){
+        tarSnapshotInventory.removeItem(item);
+        tsi = nonNullItemStacks(tarSnapshotInventory.getContents());
+        i = 0;
+      }*/
+      
+/*      for (ItemStack item : nonNullItemStacks(tarSnapshotInventory.getContents())){
+        if(storageSign.importContentItem(item)){
+          storageSign.setContentData(signBlock);
+          tarInventory.getInventory().removeItem(item);
+          break;
+        }
+      }
+      */
+/*      ItemStack[] si = Arrays.stream(snapshotInventory.getContents()).filter(Objects::nonNull).toArray(ItemStack[]::new);
+      ItemStack[] ti = tarSnapshotInventory.getContents();
+      for(ItemStack i : si){
+        if(i!=null)tarSnapshotInventory.removeItem(i);
+      }
+      ItemStack[] importItem = tarSnapshotInventory.getContents();
+      
+      for (ItemStack item : importItem){
+        // SS にねじ込む
+        if (item != null && storageSign.importContentItem(item)){
+          storageSign.setContentData(tarInventory.getBlock());
+          tarInventory.getInventory().removeItem(item);
+          break;
+        }
+      }*/
+    }
+  }
 
+  
+  
+  
+  
+    /*  if(source.equals(initiator)){
+        // 送付先に貼られている SS に押し込む時
+        if (destination.containsAtLeast(moveItem, moveItem.getMaxStackSize())) {
+          if (destination.getHolder() instanceof BlockInventoryHolder holder) {
+            Block block = holder.getBlock();
+            for (BlockFace face : faceList) {
+              Block tar = block.getRelative(face);
+              if (StorageSignV2.isLinkStorageSign(tar, block)) {
+                StorageSignV2 SS = new StorageSignV2(tar, logger);
+                if (SS.importContentItem(moveItem)) {
+                  SS.setContentData(tar);
+                  destination.removeItem(moveItem);
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }else if(destination.equals(initiator)){
+        //自分に貼られている SS に押し付ける
+        if (source.containsAtLeast(moveItem, moveItem.getMaxStackSize())) {
+          if (source.getHolder() instanceof BlockInventoryHolder holder) {
+            Block block = holder.getBlock();
+            for (BlockFace face : faceList) {
+              Block tar = block.getRelative(face);
+              if (StorageSignV2.isLinkStorageSign(tar, block)){
+                StorageSignV2 SS = new StorageSignV2(tar, logger);
+                if (SS.importContentItem(moveItem)) {
+                  SS.setContentData(tar);
+                  destination.removeItem(moveItem);
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    */
+    //if(ConfigLoader.getAutoExport()){
+      
+      
+      /*
+      // 奪ってきた時
+      logger.debug("Export: Start");
+      if(source.getHolder() instanceof BlockInventoryHolder holder) {
+        Block sourceBlock = holder.getBlock();
+        
+        for (BlockFace face : faceList) {
+          Block tar = sourceBlock.getRelative(face);
+          if (StorageSignV2.isLinkStorageSign(tar, sourceBlock)) {
+            // SS の引っこ抜きと押し込みが重複しないように片方だけキャンセルするようにしてみる
+            if (((BlockInventoryHolder) destination.getHolder()).getBlock().getState() instanceof Hopper) {
+              Block upBlock = sourceBlock.getRelative(BlockFace.UP);
+              if (upBlock.getState() instanceof Hopper) {
+                if (((org.bukkit.block.data.type.Hopper) upBlock.getBlockData()).getFacing().equals(BlockFace.DOWN)) {
+                  event.setCancelled(true);
+                  return;
+                }
+              }
+            }
+            
+            if (ConfigLoader.getAutoExport()) return;
+            StorageSignV2 SS = new StorageSignV2(tar, logger);
+            if (SS.getAmount() == 0) return;
+            if (SS.isContentItemEquals(moveItem)) {
+              Map<Integer, ItemStack> returnItem = destination.addItem(moveItem);
+              ItemStack reItem;
+              if (!returnItem.isEmpty()) {
+                reItem = returnItem.get(0);
+                if (moveItem.getAmount() == reItem.getAmount()) return;
+                moveItem.setAmount(moveItem.getAmount() - returnItem.get(0).getAmount());
+              }
+              destination.removeItem(moveItem);
+              
+              returnItem = source.addItem(moveItem);
+              if (!returnItem.isEmpty()) {
+                reItem = returnItem.get(0);
+                if (moveItem.getAmount() == reItem.getAmount()) return;
+                moveItem.setAmount(moveItem.getAmount() - returnItem.get(0).getAmount());
+              }
+              SS.setAmount(SS.getAmount() - Math.min(SS.getAmount(), moveItem.getAmount()));
+              SS.setContentData(tar);
+            }
+          }
+        }
+      }*/
+    //}
+    
+    //if (ConfigLoader.getAutoImport() && source.equals(initiator) ) {
+      //logger.debug("Export: Start");
+      // 押し込む時
+      /*
+      if(destination.containsAtLeast(moveItem, moveItem.getMaxStackSize())) {
+        if (destination.getHolder() instanceof BlockInventoryHolder holder) {
+          Block block = holder.getBlock();
+          for (BlockFace face : faceList) {
+            Block tar = block.getRelative(face);
+            if (StorageSignV2.isLinkStorageSign(tar, block)) {
+              StorageSignV2 SS = new StorageSignV2(tar, logger);
+              if (SS.importContentItem(moveItem)) {
+                SS.setContentData(tar);
+                destination.removeItem(moveItem);
+                break;
+              }
+            }
+          }
+        }
+      }
+      */
+    //}else if (destination.equals(initiator) ) {
+      // 奪ってきた時
+      /*if(source.getHolder() instanceof BlockInventoryHolder holder){
+        Block sourceBlock = holder.getBlock();
+        
+        for (BlockFace face : faceList) {
+          Block tar = sourceBlock.getRelative(face);
+          if (StorageSignV2.isLinkStorageSign(tar, sourceBlock)) {
+            // SS の引っこ抜きと押し込みが重複しないように片方だけキャンセルするようにしてみる
+            if(( (BlockInventoryHolder)destination.getHolder() ).getBlock().getState() instanceof Hopper) {
+              Block upBlock = sourceBlock.getRelative(BlockFace.UP);
+              if (upBlock.getState() instanceof Hopper) {
+                if (((org.bukkit.block.data.type.Hopper) upBlock.getBlockData()).getFacing().equals(BlockFace.DOWN)) {
+                  event.setCancelled(true);
+                  return;
+                }
+              }
+            }
+            
+            exportStorageSignContent(destination,source,tar,moveItem);*/
+            /*
+            StorageSignV2 SS = new StorageSignV2(tar, logger);
+            if (SS.getAmount() == 0) break;
+            if (SS.isContentItemEquals(moveItem)) {
+              Map<Integer, ItemStack> returnItem = destination.addItem(moveItem);
+              ItemStack reItem;
+              if (!returnItem.isEmpty()) {
+                reItem = returnItem.get(0);
+                if (moveItem.getAmount() == reItem.getAmount()) break;
+                moveItem.setAmount(moveItem.getAmount() - returnItem.get(0).getAmount());
+              }
+              destination.removeItem(moveItem);
+              
+              returnItem = source.addItem(moveItem);
+              if (!returnItem.isEmpty()) {
+                reItem = returnItem.get(0);
+                if (moveItem.getAmount() == reItem.getAmount()) break;
+                moveItem.setAmount(moveItem.getAmount() - returnItem.get(0).getAmount());
+              }
+              SS.setAmount(SS.getAmount() - Math.min(SS.getAmount(), moveItem.getAmount()));
+              SS.setContentData(tar);
+              break;
+            }
+            
+             */
+          //}
+        //}
+      //}
+    //}
+    
+    
+/*
     logger.debug("ItemMoveEvent check");
     BlockState[] blockInventory = new BlockState[2];
     Boolean flag = false;
@@ -53,7 +330,6 @@ public class StorageSignItemMoveEvent implements Listener {
       logger.trace("event.getDestination().getHolder(): " + event.getDestination().getHolder());
       if (event.getDestination().getLocation() == null){
         logger.debug("This Event is Temp Inventory.");
-        //コンポスター用に生成された一時インベントリ
       } else if (event.getDestination().getHolder() instanceof Minecart){
         //何もしない
         logger.debug("This Event is Minecart.");
@@ -89,9 +365,9 @@ public class StorageSignItemMoveEvent implements Listener {
           //boolean relIsSignPost = SignDefinition.sign_materials.contains(block.getType());
           //boolean relIsStorageSign = StorageSign.isStorageSign(block);
           //boolean relIsWallSign = SignDefinition.wall_sign_materials.contains(block.getType());
-          boolean relIsSignPost = StorageSignV2.isFloorSign(block.getType());
+          boolean relIsSignPost = StorageSignConfig.defaultData.isFloorSign(block.getType());
           boolean relIsStorageSign = StorageSignV2.isStorageSign(block);
-          boolean relIsWallSign = StorageSignV2.isWallSign(block.getType());
+          boolean relIsWallSign = StorageSignConfig.defaultData.isWallSign(block.getType());
           logger.trace("blockInventory[j].getBlock(): "+ blockInventory[j].getBlock());
 //          logger.trace("i: " + i);
           logger.trace("face[i]: " + face);
@@ -173,9 +449,9 @@ public class StorageSignItemMoveEvent implements Listener {
           //boolean relIsSignPost = SignDefinition.sign_materials.contains(block.getType());
           //boolean relIsStorageSign = StorageSign.isStorageSign(block, logger);
           //boolean relIsWallSign = SignDefinition.wall_sign_materials.contains(block.getType());
-          boolean relIsSignPost = StorageSignV2.isFloorSign(block.getType());
+          boolean relIsSignPost = StorageSignConfig.defaultData.isFloorSign(block.getType());
           boolean relIsStorageSign = StorageSignV2.isStorageSign(block);
-          boolean relIsWallSign = StorageSignV2.isWallSign(block.getType());
+          boolean relIsWallSign = StorageSignConfig.defaultData.isWallSign(block.getType());
           logger.trace("blockInventory[j].getBlock(): "+ blockInventory[j].getBlock());
 //          logger.trace("i: " + i);
           logger.trace("face[i]: " + face);
@@ -215,7 +491,53 @@ public class StorageSignItemMoveEvent implements Listener {
       }
     }
     logger.debug("★onItemMove:End.");
-  }
+    */
+  //}
+  
+  /*private void importStorageSignContent(Inventory destination, Inventory source , Block StorageSignBlock, ItemStack moveItem){
+  //private void importStorageSignContent(Inventory destination,ItemStack moveItem){
+    if(destination.containsAtLeast(moveItem, moveItem.getMaxStackSize())) {
+      if (destination.getHolder() instanceof BlockInventoryHolder holder) {
+        Block block = holder.getBlock();
+        for (BlockFace face : faceList) {
+          Block tar = block.getRelative(face);
+          if (StorageSignV2.isLinkStorageSign(tar, block)) {
+            StorageSignV2 SS = new StorageSignV2(tar, logger);
+            if (SS.importContentItem(moveItem)) {
+              SS.setContentData(tar);
+              destination.removeItem(moveItem);
+              break;
+            }
+          }
+        }
+      }
+    }
+  }//*/
+  
+  /*private void exportStorageSignContent(Inventory destination, Inventory source , Block StorageSignBlock, ItemStack moveItem){
+    if (ConfigLoader.getAutoExport()) return;
+    StorageSignV2 SS = new StorageSignV2(StorageSignBlock, logger);
+    if (SS.getAmount() == 0) return;
+    if (SS.isContentItemEquals(moveItem)) {
+      Map<Integer, ItemStack> returnItem = destination.addItem(moveItem);
+      ItemStack reItem;
+      if (!returnItem.isEmpty()) {
+        reItem = returnItem.get(0);
+        if (moveItem.getAmount() == reItem.getAmount()) return;
+        moveItem.setAmount(moveItem.getAmount() - returnItem.get(0).getAmount());
+      }
+      destination.removeItem(moveItem);
+      
+      returnItem = source.addItem(moveItem);
+      if (!returnItem.isEmpty()) {
+        reItem = returnItem.get(0);
+        if (moveItem.getAmount() == reItem.getAmount()) return;
+        moveItem.setAmount(moveItem.getAmount() - returnItem.get(0).getAmount());
+      }
+      SS.setAmount(SS.getAmount() - Math.min(SS.getAmount(), moveItem.getAmount()));
+      SS.setContentData(StorageSignBlock);
+    }
+  }//*/
 
   @EventHandler
   public void onInventoryPickup(InventoryPickupItemEvent event) {//ホッパーに投げ込まれたとき
@@ -243,9 +565,9 @@ public class StorageSignItemMoveEvent implements Listener {
         //boolean relIsSignPost = SignDefinition.sign_materials.contains(block.getType());
         //boolean relIsStorageSign = StorageSign.isStorageSign(block, logger);
         //boolean relIsWallSign = SignDefinition.wall_sign_materials.contains(block.getType());
-        boolean relIsSignPost = StorageSignV2.isFloorSign(block.getType());
+        boolean relIsSignPost = StorageSignConfig.defaultData.isFloorSign(block.getType());
         boolean relIsStorageSign = StorageSignV2.isStorageSign(block);
-        boolean relIsWallSign = StorageSignV2.isWallSign(block.getType());
+        boolean relIsWallSign = StorageSignConfig.defaultData.isWallSign(block.getType());
 //        logger.trace(" i: " + i);
         logger.trace(" relIsSignPost: " + relIsSignPost);
         logger.trace(" relIsStorageSign: " + relIsStorageSign);
@@ -294,7 +616,7 @@ public class StorageSignItemMoveEvent implements Listener {
 
     if(storageSign.importContentItem(item)){
       inv.removeItem(item);
-      storageSign.setStorageData(block);
+      storageSign.setContentData(block);
     }
 /*    if (inv.containsAtLeast(item, item.getMaxStackSize())) {
       logger.debug("Item is more 1s.Import Item.");
@@ -476,14 +798,15 @@ public class StorageSignItemMoveEvent implements Listener {
       logger.debug("Export Item to Inventory.");
       ItemStack cItem = item.clone();
       inv.addItem(cItem);
-      storageSign.addAmount(-cItem.getAmount());
+      storageSign.setAmount(storageSign.getAmount() - cItem.getAmount());
+      //storageSign.addAmount(-cItem.getAmount());
     }
 /*    for (int i = 0; i < 4; i++) {
       logger.trace("set Line i:" + i + ". Text: " + storageSign.getSigntext(i));
       sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
     }
     sign.update();*/
-    storageSign.setStorageData(block);
+    storageSign.setContentData(block);
     logger.debug("ExportSign:End");
   }
 

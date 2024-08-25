@@ -1,4 +1,4 @@
-package wacky.storagesign.event;
+package wacky.storagesign.eventHandler;
 
 import com.github.teruteru128.logger.Logger;
 import org.bukkit.entity.EntityType;
