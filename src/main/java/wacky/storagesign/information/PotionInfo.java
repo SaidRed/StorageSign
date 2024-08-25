@@ -6,7 +6,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionType;
-import wacky.storagesign.StorageSignConfig;
+import wacky.storagesign.StorageSignConfig.defaultData;
+import wacky.storagesign.StorageSignConfig.potionType;
 
 /**
  * <strong>ポーションの表記ルール</strong><br>
@@ -48,7 +49,7 @@ public class PotionInfo extends TypeInformation<PotionType, PotionMeta> implemen
    */
   public static Material getPotionCategory(String itemData){
     if(itemData.equals("POTION")) return Material.POTION;
-    return StorageSignConfig.defaultData.getOriginalItemName(itemData);
+    return defaultData.getOriginalItemName(itemData);
   }
 
   /**
@@ -58,7 +59,7 @@ public class PotionInfo extends TypeInformation<PotionType, PotionMeta> implemen
    */
   public static PotionType getPotionType(String name){
     //後ろ切れても可.
-    return StorageSignConfig.potionType.getPotionType(name);
+    return potionType.getPotionType(name);
   }
 
   /**
@@ -67,7 +68,7 @@ public class PotionInfo extends TypeInformation<PotionType, PotionMeta> implemen
    * @return ノーマルポーションタイプデータ
    */
   private static PotionType getPotionType(PotionMeta meta) {
-    return StorageSignConfig.potionType.getNormalPotionType(meta.getBasePotionType());
+    return potionType.getNormalPotionType(meta.getBasePotionType());
   }
 
   /**
@@ -75,7 +76,7 @@ public class PotionInfo extends TypeInformation<PotionType, PotionMeta> implemen
    * @return FullPotionType
    */
   private PotionType getPotionType() {
-    return StorageSignConfig.potionType.getPotionTypeFull(type,cord);
+    return potionType.getPotionTypeFull(type,cord);
   }
 
   /**
@@ -84,7 +85,7 @@ public class PotionInfo extends TypeInformation<PotionType, PotionMeta> implemen
    * @return cord値
    */
   private static int getStrongCord(PotionMeta meta){
-    return StorageSignConfig.potionType.getCord(meta.getBasePotionType());
+    return potionType.getCord(meta.getBasePotionType());
   }
 
   /**
@@ -115,7 +116,7 @@ public class PotionInfo extends TypeInformation<PotionType, PotionMeta> implemen
    */
   @Override
   protected String getTypeName() {
-    return StorageSignConfig.potionType.getNormalPotionType(type).toString();
+    return potionType.getNormalPotionType(type).toString();
   }
 
   /**
@@ -125,7 +126,7 @@ public class PotionInfo extends TypeInformation<PotionType, PotionMeta> implemen
    */
   @Override
   protected String getTypeShortName() {
-    return StorageSignConfig.potionType.getSSPotionTypeName(type);
+    return potionType.getSSPotionTypeName(type);
   }
 
   /**
@@ -137,7 +138,7 @@ public class PotionInfo extends TypeInformation<PotionType, PotionMeta> implemen
    */
   @Override
   protected int getCord(PotionMeta meta) {
-    return StorageSignConfig.potionType.getCord(meta.getBasePotionType());
+    return potionType.getCord(meta.getBasePotionType());
   }
 
   /**

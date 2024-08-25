@@ -140,4 +140,8 @@ public class ConfigLoader {
   public static boolean getFallingBlockItemSs() {
     return fileConfig.getBoolean("falling-block-itemSS");
   }
+  
+  public static boolean getPaperServerFlag(){
+    return fileConfig.getBoolean("paper-server");
+  }
 }

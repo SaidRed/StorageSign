@@ -5,7 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.MusicInstrument;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.MusicInstrumentMeta;
-import wacky.storagesign.StorageSignConfig;
+import wacky.storagesign.StorageSignConfig.goatHorn;
 
 public class GoatHorn extends NormalInformation implements SSInformation{
   private static final Material mate = Material.GOAT_HORN;
@@ -29,7 +29,7 @@ public class GoatHorn extends NormalInformation implements SSInformation{
   }
 
   private static MusicInstrument getMusicInstrument(String itemData){
-    return StorageSignConfig.goatHorn.getMusicInstrument(itemData);
+    return goatHorn.getMusicInstrument(itemData);
   }
 
   /**
@@ -39,7 +39,7 @@ public class GoatHorn extends NormalInformation implements SSInformation{
    */
   @Override
   public String getSSStorageItemData() {
-    return content.toString() + ":" + StorageSignConfig.goatHorn.getMusicName(music);
+    return content.toString() + ":" + goatHorn.getMusicName(music);
   }
 
   /**

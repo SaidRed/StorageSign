@@ -1,10 +1,13 @@
 package wacky.storagesign;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.MusicInstrument;
+import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.meta.MusicInstrumentMeta;
+import org.bukkit.inventory.*;
 import org.bukkit.potion.PotionType;
+import org.jetbrains.annotations.NotNull;
 import wacky.storagesign.information.*;
 
 import java.util.*;
@@ -29,7 +32,7 @@ public class StorageSignConfig {
      */
     public static final String ominousBanner = "OMINOUS_BANNER";
 
-    private static final Map<String, Material> ORIGINAL_ITEM_NAME = Map.ofEntries(
+    static Map<String, Material> ORIGINAL_ITEM_NAME = Map.ofEntries(
             entry(enchantedBook.SS_ITEM_NAME,ENCHANTED_BOOK),
             entry("SPOTION",SPLASH_POTION),
             entry("LPOTION",LINGERING_POTION),
@@ -70,28 +73,37 @@ public class StorageSignConfig {
     public static Material getMaterial(String itemName){
       return OLD_ITEM_NAME.getOrDefault(itemName, getOriginalItemName(itemName));
     }
-
+    
     /**
+     * Material から Sign であるか確認する
      *
+     * @param material 確認するMaterial
+     * @return true : Sign である / false : ではない
      */
-    public enum nameLength{
-      Long(true),
-      Short(false)
-      ;
-      public final boolean length;
-      nameLength(boolean length){
-        this.length = length;
-      };
+    public static boolean isSign(Material material){
+      return isFloorSign(material) || isWallSign(material);
     }
-
+    
+    public static boolean isFloorSign(Material material) {
+      return material.data.equals(org.bukkit.block.data.type.Sign.class);
+    }
+    
+    public static boolean isWallSign(Material material){
+      return material.data.equals(org.bukkit.block.data.type.WallSign.class);
+    }
+    
+    /**
+     * StorageSign の張り付けられる面一覧
+     */
+    public static final BlockFace[] faceList = {BlockFace.UP, BlockFace.SOUTH, BlockFace.NORTH, BlockFace.EAST, BlockFace.WEST};
   }
-
+  
   public static class informationData{
     /**
      * 作成した SSInformation の対応リスト
      * ここへ登録すれば Material に対応する Information を使って StorageSign の情報作る
      */
-    private static final Map<Material,Class<? extends SSInformation>> informationList = Map.ofEntries(
+    static Map<Material,Class<? extends SSInformation>> informationList = Map.ofEntries(
             entry(ENCHANTED_BOOK, EnchantedBook.class),
             entry(SPLASH_POTION, PotionInfo.class),
             entry(LINGERING_POTION, PotionInfo.class),
@@ -441,8 +453,8 @@ public class StorageSignConfig {
      */
     private static final String itemName = "_goat_horn";
 
-    private static Map<String,MusicInstrument> musicInstrumentMap;
-    private static Map<MusicInstrument,String> musicNameMap;
+    private static final Map<String,MusicInstrument> musicInstrumentMap;
+    private static final Map<MusicInstrument,String> musicNameMap;
 
     static {
       musicInstrumentMap = new HashMap<>();
@@ -450,7 +462,7 @@ public class StorageSignConfig {
 
       List<MusicInstrument> musics = org.bukkit.Bukkit.getRegistry(MusicInstrument.class).stream().toList();
       for(MusicInstrument music : musics){
-        String fullName = music.getKey().getKey().toString();
+        String fullName = music.getKey().getKey();
         String shortName = fullName.replaceAll(itemName + "$","");
 
         musicNameMap.put(music,shortName);
@@ -465,9 +477,17 @@ public class StorageSignConfig {
     public static String getMusicName(MusicInstrument music) {
       return musicNameMap.get(music);
     }
-
-    //if(itemMeta instanceof MusicInstrumentMeta meta)
-    //MusicInstrument music = meta.getInstrument();
-    //String name = music.getKey().getKey().toString();
   }
+  
+  /**
+   * 外部から新しいアイテムを登録する用の入口
+   * @param itemData オリジナルアイテム名 SSがオリジナルのアイテムと識別するための名前
+   * @param material オリジナルアイテムのベースマテリアルテータ
+   * @param SSInfo オリジナルアイテムを出し入れする為の変換クラス（専用で作成してね）
+   */
+  public static void addStorageSignContents(@NotNull String itemData, @NotNull Material material, @NotNull Class<? extends SSInformation> SSInfo){
+    defaultData.ORIGINAL_ITEM_NAME.put(itemData,material);
+    informationData.informationList.put(material,SSInfo);
+  }
+  
 }

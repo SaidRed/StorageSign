@@ -2,10 +2,13 @@ package wacky.storagesign;
 
 import com.github.teruteru128.logger.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
 import org.bukkit.inventory.ItemStack;
@@ -175,29 +178,6 @@ public class StorageSignV2 implements StorageSignV2Interface {
 
   }
 
-
-  /**
-   * Material から Sign であるか確認する
-   *
-   * @param material 確認するMaterial
-   * @return true : Sign である / false : ではない
-   */
-  protected static boolean isSign(Material material){
-    return isFloorSign(material) || isWallSign(material);
-    /*
-    if(material.data.equals(org.bukkit.block.data.type.Sign.class)) return true;
-    if(material.data.equals(org.bukkit.block.data.type.WallSign.class)) return true;
-    return false;*/
-  }
-
-  public static boolean isFloorSign(Material material) {
-    return material.data.equals(org.bukkit.block.data.type.Sign.class);
-  }
-
-  public static boolean isWallSign(Material material){
-    return material.data.equals(org.bukkit.block.data.type.WallSign.class);
-  }
-
   /**
    * ItemStack に アイテムStorageSign情報を書き込む
    *
@@ -251,16 +231,37 @@ public class StorageSignV2 implements StorageSignV2Interface {
     storageSign.setItemMeta(meta);
     return true;
   }
-
+  
   /**
    * 現在の情報をブロックに書き込む
    *
    * @param signBlock Signブロック に持っている情報を書き込む
    * @return 書き込みの成否 true : 成功 / false : 失敗
    */
-  public boolean setStorageData(Block signBlock){
+  public boolean setContentData(Block signBlock){
+    return setContentData(signBlock,null);
+  }
+  
+  /**
+   * プレイヤーがブロックStorageSignを設置した時
+   * @param signBlock Signブロック に持っている情報を書き込む -> デフォルトのテキストカラーを設定する
+   * @return 書き込みの成否 true : 成功 / false : 失敗
+   */
+  public boolean playerPlace(Block signBlock){
+    return setContentData(signBlock,signBlock.getType().equals(Material.DARK_OAK_SIGN)?DyeColor.WHITE:DyeColor.BLACK);
+  }
+  
+  /**
+   * 現在の情報をブロックに書き込む
+   *
+   * @param signBlock Signブロック に持っている情報を書き込む
+   * @param color 文字色 / null だった場合は色変えしない
+   * @return 書き込みの成否 true : 成功 / false : 失敗
+   */
+  private boolean setContentData(Block signBlock, DyeColor color){
     if(signBlock.getState() instanceof Sign signState){
       SignSide side = signState.getSide(Side.FRONT);
+      if(color!=null)side.setColor(color);
       side.setLine(0, StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
       side.setLine(1, info.getSSStorageItemData());
       side.setLine(2, String.valueOf(amount));
@@ -276,7 +277,8 @@ public class StorageSignV2 implements StorageSignV2Interface {
    * @param itemStack 登録するアイテム
    */
   public void entryContent(ItemStack itemStack){
-    if(isSign(itemStack.getType()) && isStorageSign(itemStack)) {
+    
+    if(StorageSignConfig.defaultData.isSign(itemStack.getType()) && isStorageSign(itemStack)) {
         this.info = new StorageSignInfo(itemStack, logger);
         return;
     }
@@ -371,7 +373,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
    * @return true : is StorageSign / false : not StorageSign
    */
   protected static boolean isStorageSign(Material material, String itemName) {
-    return isSign(material) && itemName.startsWith(StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
+    return StorageSignConfig.defaultData.isSign(material) && itemName.startsWith(StorageSignConfig.defaultData.STORAGE_SIGN_NAME);
   }
 
   /**
@@ -460,7 +462,7 @@ public class StorageSignV2 implements StorageSignV2Interface {
   }
 
   /**
-   * アイテムStorageSign から ブロックStorageSign へアイテムを入れる
+   * アイテムStorageSign から ブロックStorageSign へアイテムを分割する
    * @param itemSS 入庫したい
    */
   public boolean SSExchangeExport(StorageSignV2 itemSS, ItemStack itemStack){
@@ -483,15 +485,42 @@ public class StorageSignV2 implements StorageSignV2Interface {
     empty = true;
     info = new NormalInformation(materialContent, logger);
   }
-
-  /**
-   * 設置時に見づらい看板の色を変換するように取得できるようにしておく
-   * @return StorageSign の木材情報返す
-   */
-  public Material getMaterialSign(){return materialSign;}
-
-  // TODO ホッパー処理用（元処理から変更しないための処置なので削除したい）
+  
+  // TODO ホッパー 試作メゾット
+  public static List<Block> isLinkStorageSign(Block targetBlock, ItemStack contentItem, boolean checkEmpty, Logger logger){
+    List<Block> blocks = new ArrayList<>();
+    for (BlockFace face: StorageSignConfig.defaultData.faceList){
+      Block check = targetBlock.getRelative(face);
+      if (!isStorageSign(check)) continue;
+      StorageSignV2 SS = new StorageSignV2(check,logger);
+      if (checkEmpty && SS.getAmount() == 0) continue;
+      Material material = check.getType();
+      if (SS.isContentItemEquals(contentItem)) {
+        if (StorageSignConfig.defaultData.isFloorSign(material)){
+          if (check.getRelative(BlockFace.DOWN).equals(targetBlock)) blocks.add(check);
+        } else if (StorageSignConfig.defaultData.isWallSign(material)) {
+          WallSign sign = (WallSign) check.getBlockData();
+          if (check.getRelative(sign.getFacing().getOppositeFace()).equals(targetBlock)) blocks.add(check);
+        }
+      }
+    }
+    return blocks;
+  }
+  
+  public static boolean isLinkStorageSign(Block StorageSignBlock, Block linkBlock){
+    Material SSType = StorageSignBlock.getType();
+    if(!isStorageSign(StorageSignBlock))return false;
+    if(StorageSignConfig.defaultData.isFloorSign(SSType))
+      return StorageSignBlock.getRelative(BlockFace.DOWN).equals(linkBlock);
+    if(StorageSignConfig.defaultData.isWallSign(SSType)){
+      WallSign sign = (WallSign) StorageSignBlock.getBlockData();
+      return StorageSignBlock.getRelative(sign.getFacing().getOppositeFace()).equals(linkBlock);
+    }
+    return false;
+  }
+  
   public int getAmount(){return amount;}
-
-  public void addAmount(int addAmount){amount +=addAmount;}
+  
+  public void setAmount(int amount){this.amount = amount;}
+  
 }

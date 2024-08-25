@@ -5,7 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
-import wacky.storagesign.StorageSignConfig;
+import wacky.storagesign.StorageSignConfig.defaultData;
 
 public class OminousBanner extends NormalInformation implements SSInformation{
   private static final String ominousBannerComponent = "minecraft:white_banner[minecraft:item_name='{\"color\":\"gold\",\"translate\":\"block.minecraft.ominous_banner\"}',minecraft:hide_additional_tooltip={},minecraft:banner_patterns=[{color: \"cyan\", pattern: \"minecraft:rhombus\"}, {color: \"light_gray\", pattern: \"minecraft:stripe_bottom\"}, {color: \"gray\", pattern: \"minecraft:stripe_center\"}, {color: \"light_gray\", pattern: \"minecraft:border\"}, {color: \"black\", pattern: \"minecraft:stripe_middle\"}, {color: \"light_gray\", pattern: \"minecraft:half_horizontal\"}, {color: \"light_gray\", pattern: \"minecraft:circle\"}, {color: \"black\", pattern: \"minecraft:border\"}]]";
@@ -34,7 +34,7 @@ public class OminousBanner extends NormalInformation implements SSInformation{
   }
 
   private static boolean isOminousBanner(String itemData){
-    return itemData.equals(StorageSignConfig.defaultData.ominousBanner);
+    return itemData.equals(defaultData.ominousBanner);
   }
 
   /**
@@ -44,7 +44,7 @@ public class OminousBanner extends NormalInformation implements SSInformation{
    */
   @Override
   public String getSSStorageItemData() {
-    return ominousBanner ? StorageSignConfig.defaultData.ominousBanner : content.toString();
+    return ominousBanner ? defaultData.ominousBanner : content.toString();
   }
 
   /**

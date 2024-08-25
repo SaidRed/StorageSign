@@ -6,7 +6,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import wacky.storagesign.StorageSignConfig;
+import wacky.storagesign.StorageSignConfig.enchantedBook;
 
 /**
  * エンチャントブックの表記ルール
@@ -41,7 +41,7 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
    */
   private static Enchantment getEnchantment(String enchantName) {
     //後ろ切れても可.
-    return StorageSignConfig.enchantedBook.getEnchantment(enchantName);
+    return enchantedBook.getEnchantment(enchantName);
   }
 
   /**
@@ -83,7 +83,7 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
    */
   @Override
   protected String getStorageItemShortName() {
-    return StorageSignConfig.enchantedBook.SS_ITEM_NAME;
+    return enchantedBook.SS_ITEM_NAME;
   }
 
   /**
@@ -103,7 +103,7 @@ public class EnchantedBook extends TypeInformation<Enchantment, EnchantmentStora
    */
   @Override
   protected String getTypeShortName() {
-    return StorageSignConfig.enchantedBook.getEnchantShortName(type);
+    return enchantedBook.getEnchantShortName(type);
   }
 
   /**

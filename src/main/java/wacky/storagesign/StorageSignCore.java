@@ -2,35 +2,25 @@ package wacky.storagesign;
 
 import com.github.teruteru128.logger.Logger;
 
-import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Sign;
-import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Minecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
-import org.bukkit.event.inventory.InventoryMoveItemEvent;
-import org.bukkit.event.inventory.InventoryPickupItemEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerSignOpenEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.recipe.CraftingBookCategory;
 import org.bukkit.plugin.java.JavaPlugin;
-import wacky.storagesign.event.*;
-import wacky.storagesign.signdefinition.SignDefinition;
+import wacky.storagesign.eventHandler.*;
+
+import java.util.Arrays;
 
 public class StorageSignCore extends JavaPlugin implements Listener {
 
@@ -64,7 +54,11 @@ public class StorageSignCore extends JavaPlugin implements Listener {
 
 //    while(it.hasNext()){
 //      Material mat = it.next();
-    for(Material mat : SignDefinition.signs){
+//    for(Material mat : SignDefinition.signs){
+    Material[] signs = Arrays.stream(Material.values())
+            .filter(M -> M.data.equals(org.bukkit.block.data.type.Sign.class))
+            .toArray(Material[]::new);
+    for (Material mat : signs){
       logger.trace("signRecipi name:" + mat);
 
       ShapedRecipe storageSignRecipe = new ShapedRecipe(
@@ -89,7 +83,18 @@ public class StorageSignCore extends JavaPlugin implements Listener {
     getServer().getPluginManager().registerEvents(new StorageSignPlayerEvent(this), this);
     getServer().getPluginManager().registerEvents(new StorageSignBlockPlaceBreak(this), this);
     getServer().getPluginManager().registerEvents(new StorageSignPickupItemEvent(this), this);
-    getServer().getPluginManager().registerEvents(new StorageSignItemMoveEvent(this), this);
+
+    //getServer().getPluginManager().registerEvents(new StorageSignItemMoveEvent(this), this);
+    
+    //StorageSignAutoImportEvent
+    if(ConfigLoader.getAutoImport()) getServer().getPluginManager().registerEvents(new StorageSignAutoImportEvent(this), this);
+
+    if(ConfigLoader.getAutoExport()) getServer().getPluginManager().registerEvents(
+            ConfigLoader.getPaperServerFlag()
+                    ? new StorageSignAutoExportEventPaper(this)
+                    : new StorageSignAutoExportEvent(this), this
+    );
+    
     logger.trace("no-bud:" + ConfigLoader.getNoBud());
     if (ConfigLoader.getNoBud()) {
       logger.trace("no-bud is True.");

@@ -1,8 +1,7 @@
-package wacky.storagesign.event;
+package wacky.storagesign.eventHandler;
 
 import com.github.teruteru128.logger.Logger;
 import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -21,6 +20,7 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import wacky.storagesign.ConfigLoader;
+import wacky.storagesign.StorageSignConfig;
 import wacky.storagesign.StorageSignCore;
 import wacky.storagesign.StorageSignV2;
 
@@ -91,18 +91,15 @@ public class StorageSignBlockPlaceBreak implements Listener {
         logger.trace(" set Line i:" + i + ". Text: " + storageSign.getSigntext(i));
         sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
       }*/
-      storageSign.setStorageData(block);
-      Sign sign = (Sign) block.getState();
+      
+      logger.debug("UpdateSign.");
+      //ダークオークの場合文字色を白くする
+      storageSign.playerPlace(block);
 
       //    logger.trace("storageSign.getSmat() == Material.DARK_OAK_SIGN: " + (storageSign.getSmat() == Material.DARK_OAK_SIGN));
       //logger.trace("storageSign.materialContent: " + storageSign.materialContent.toString());
-      if (storageSign.getMaterialSign().equals(Material.DARK_OAK_SIGN)) {
-        logger.debug("This Sign is DarkOak Sign.0");
-        sign.getSide(Side.FRONT).setColor(DyeColor.WHITE);//文字色を白くする
-      }
+      
 
-      logger.debug("UpdateSign.");
-      sign.update();
 
       //時差発動が必要らしい
       player.closeInventory();
@@ -130,10 +127,24 @@ public class StorageSignBlockPlaceBreak implements Listener {
         logger.debug(" breakItem is StorageSign.");
         breakSignMap.put(block.getLocation(), block);
       }
+      
+      for (BlockFace face : new BlockFace[]{BlockFace.UP,BlockFace.NORTH,BlockFace.EAST,BlockFace.WEST,BlockFace.SOUTH}){
+        Block relBlock = block.getRelative(face);
+        logger.trace("  relBlock: " + relBlock);
+        if (StorageSignV2.isLinkStorageSign(relBlock,block))
+          breakSignMap.put(relBlock.getLocation(),relBlock);
+        
+        //if (face.equals(BlockFace.UP) && StorageSignConfig.defaultData.isFloorSign(relBlock.getType())) {
+        //  breakSignMap.put(relBlock.getLocation(), relBlock);
+        //} else if (relBlock.getBlockData() instanceof WallSign wallSign)
+        //  if (wallSign.getFaces().equals(face.getOppositeFace()))
+        //    breakSignMap.put(relBlock.getLocation(), relBlock);
+      }
 
+      /*
       Block relBlock = block.getRelative(BlockFace.UP);
       logger.trace("  relBlock: " + relBlock);
-      if (relBlock.getBlockData() instanceof Sign sign) {
+      if (relBlock.getBlockData() instanceof Sign) {
           breakSignMap.put(relBlock.getLocation(), relBlock);
       }
 
@@ -149,7 +160,7 @@ public class StorageSignBlockPlaceBreak implements Listener {
           if (sign.getFacing() == face)
             breakSignMap.put(relBlock.getLocation(), relBlock);
         }
-      }
+      }*/
 
       logger.trace(" breakSignMap.isEmpty(): " + breakSignMap.isEmpty());
       if (breakSignMap.isEmpty()) {
